@@ -1,0 +1,29 @@
+# Logs and evidence dumps — this repo ships the *recipe*, not raw run artifacts
+*.log
+*.jsonl
+*.out
+evidence/
+runs/
+*-battery-*/
+launch-*.log
+serve-*.log
+
+# JIT / compile caches
+jit-cache*/
+.cache/
+__pycache__/
+*.pyc
+
+# Local overrides / secrets
+.env
+*.local
+*.local.sh
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editor cruft
+.vscode/
+.idea/
+*.swp
