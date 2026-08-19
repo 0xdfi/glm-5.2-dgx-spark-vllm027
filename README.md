@@ -1,5 +1,13 @@
 # GLM-5.2 on 4x DGX Spark GB10 — vLLM 0.27 serving recipe
 
+![Capacity vs speed across DCP degrees](docs/img/capacity-vs-speed.png)
+
+*The core tradeoff, from measured data: moving DCP1 → DCP2 → DCP4 buys 3x the context
+(320K → 1M tokens) for roughly 10% of peak decode throughput and about 40% of cold-prefill
+throughput. Bar labels are true values; bars are scaled to share one axis. Peak figures are
+averaged across the two probe passes. The rightmost pair shows why `mnbt 2048` beats `4096`:
+identical context and prefill, but +13% peak C4. Full 12-configuration matrix below.*
+
 A measured, reproducible recipe for serving **GLM-5.2** (MoE, W4A16 INT4-Marlin experts,
 B12X sparse MLA attention, nvfp4 KV cache, MTP k=5 speculative decode) across **4x NVIDIA
 DGX Spark GB10** nodes (sm_121a, 121GB unified LPDDR5 per node, ~273GB/s memory bandwidth,
