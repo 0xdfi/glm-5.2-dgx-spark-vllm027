@@ -146,17 +146,15 @@ CUDAGRAPH_CAPTURE_SIZES=6,12,18,24 PROFILE_DRAFTER_CAP=1 \
   ALLOCATOR_BUDGET_BYTES=119185342464 \
   RUN_ID=dcp4-1m-2048 bash recipes/launch.sh launch
 ```
-<!-- FINAL_ROW_PENDING -->
-Boots and serves; battery interrupted mid-run by a live-traffic contamination incident
-(see `docs/operations.md` — the "mystery client" incident). Decode legs (C1/C2/C4 prose)
-and the cold-prefill gate completed and are verified uncontaminated; the peak-decode legs
-(peak C1/peak C4) were not yet run when the battery was halted.
+Fully measured. prose C1 21.96/22.54 · prose C2 34.34 sat-est (33.43 wall) · prose C4
+49.12/48.43 sat-est (48.22/48.24 wall) · peak C1 32.55 → **36.60** (pass of record) · peak C2
+49.45 · peak C4 68.42 → **73.23** (pass of record) · cold prefill 422.8 tok/s (187,022 tok) ·
+accepted/step 1.21–1.35 prose, 3.99–4.10 peak · temp-0 determinism spot-check 2/3 diverged.
 
-Confirmed: prose C1 21.96/22.54 · prose C2 34.34 sat-est / 33.43 wall · prose C4 49.12/48.43
-sat-est (48.22/48.24 wall) · cold prefill 422.8 tok/s (187,022 tok — ties 1M@4096's 421.5,
-the DCP4 chunk-size plateau holds at this cell too) · accepted/step 1.21–1.35 · temp-0
-determinism spot-check 2/3 diverged (consistent with the mnbt-linked anomaly, see
-`docs/findings.md`). **peak C1 / peak C4: still TBD**, pending a follow-up battery leg.
+**This is the recommended max-context configuration.** At identical 1M KV it beats the
+mnbt-4096 variant on peak C4 by +13% (73.23 vs 64.61/60.67) for the same cold-prefill
+throughput (422.8 vs 421.5), and shows a lower temp-0 divergence rate (2/3 vs 3/3). The
+mnbt-2048 sweet spot holds at every DCP level measured — see `docs/findings.md`.
 
 ### DCP4 1M @ mnbt 4096 — summit config (max context + max chunk, left serving)
 ```bash

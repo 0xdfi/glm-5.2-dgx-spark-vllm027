@@ -41,14 +41,15 @@ something wasn't measured, it says `n/m`.
 | DCP4 800K@2048 | 22.34 / 23.03 | n/m | 49.33 / 49.01 | 36.44 | n/m | 68.28 | 425.1 |
 | DCP4 1M@512 | 22.10 / 22.06 | n/m | 48.08 / 49.29 | 33.62 | n/m | 69.73 | 361.7 |
 | DCP4 1M@4096 | 22.43 / 22.19 | n/m | 49.97 / 50.54 | 37.00 / 35.66 | n/m | 64.61 / 60.67 | 421.5 |
-<!-- FINAL_ROW_PENDING -->
-| DCP4 1M@2048 | 21.96 / 22.54 | 34.34 | 49.12 / 48.43 | TBD | TBD | TBD | 422.8 |
+| DCP4 1M@2048 | 21.96 / 22.54 | 34.34 | 49.12 / 48.43 | 32.55 / 36.60 | 49.45 | 68.42 / 73.23 | 422.8 |
 
-The last row (**DCP4 1M@2048**) is the final cell of the campaign matrix and is not fully
-closed out: prose C1/C2/C4 and the cold-prefill gate are measured and verified
-uncontaminated, but the peak-decode legs (peak C1, peak C4) were not yet run when the battery
-was interrupted by a live-traffic contamination incident (see `docs/operations.md`). It boots
-and serves correctly at this configuration — only the two `TBD` cells are outstanding.
+All twelve configurations above are fully measured; the matrix is complete.
+
+Where two values are shown (`a / b`) they are two independent runs of the same probe on the
+same server instance, reported unaveraged so you can see the spread. For the peak-decode
+columns the second value is the **pass of record**: peak probes read low on a freshly booted
+server and recover after some uptime, so the protocol runs them twice (see
+`benchmarks/protocol.md`).
 
 **Units and protocol**, so these numbers mean what they look like they mean:
 - All throughput figures are **tok/s**, measured from the vLLM **server-side counters**
