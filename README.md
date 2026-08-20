@@ -207,3 +207,62 @@ level tested — this ceiling is arithmetic, not a bug, and there is no meaningf
 MIT — see `LICENSE`. This repository's own code (the launcher, docs, and patch descriptions)
 is MIT licensed; it does not relicense vLLM, the GLM-5.2 model weights, or any third-party
 repository referenced above, each of which carries its own license.
+
+---
+
+## Update — 2026-08-20: CPU pinning to the fast cores
+
+**Change:** all presets now recommend pinning the serving container to GB10's fast CPU cores.
+Added to `recipes/launch.sh` as `CPUSET_CPUS` / `CPUSET_MEMS` (empty by default — you must
+opt in, and you should verify your own core layout first).
+
+```bash
+CPUSET_CPUS=5-9,15-19 CPUSET_MEMS=0   # add to any preset in recipes/presets.md
+```
+
+**Why.** GB10's 20 CPU cores are heterogeneous *and interleaved*: cores **5-9 and 15-19** are
+3.9 GHz Cortex-X925, cores **0-4 and 10-14** are 2.808 GHz Cortex-A725. A naive "pin to the
+first ten cores" would land you entirely on the slow set. Verify before copying:
+
+```bash
+for c in $(seq 0 19); do echo -n "cpu$c "; cat /sys/devices/system/cpu/cpu$c/cpufreq/cpuinfo_max_freq; done
+```
+
+**Measured effect** (DCP1 320K@2048, live A/B on one cluster, probes on an otherwise-idle
+server, `docker update --cpuset-cpus` applied without restarting the engine):
+
+| peak C4 decode | n | mean | median | range | sd |
+|---|---|---|---|---|---|
+| pinned `5-9,15-19` | 5 | **81.02** | 81.22 | 78.2–83.3 | **1.71** |
+| all cores `0-19` | 4 | 77.09 | 77.05 | 71.6–82.7 | 4.52 |
+
+**+5.1% on the mean**, which happens to match the +5% figure circulating in the GB10 community.
+Be honest about the strength of this result: at n=4–5 the ranges overlap and the difference is
+**not statistically separable from noise** (t≈1.6, p≈0.15). The more robust effect is the
+**variance collapse — sd 1.71 vs 4.52** — which is what the mechanism predicts: threads can no
+longer migrate onto 2.8 GHz cores mid-step, so the slow tail disappears. Other metrics moved
+within noise on single samples (prose C1 −2.4%, prose C4 +0.6%, peak C1 −0.3%).
+
+**Caveats.** Pinning halves the cores available to the container, which may hurt under heavier
+or multi-tenant load than these probes generate. It is trivially reversible on a running
+container (`docker update --cpuset-cpus=0-19 <container>`) — note that passing an *empty*
+value does not clear it; pass the full range instead.
+
+### Also tested and rejected on 2026-08-20
+
+- **Dual-rail NCCL (`NCCL_IB_MERGE_NICS`).** These nodes expose two ACTIVE 100 Gb/s RoCE ports
+  (`rocep1s0f1` and `roceP2p1s0f1`) and the stock recipe pins only the first, so the second
+  looks like free bandwidth. It is not. `ib_write_bw` on rail 2 alone reaches 11,631 MB/s
+  (~93 Gb/s, line rate), but running **both rails simultaneously** between the same node pair
+  yields 5,850 + 5,808 = **11,659 MB/s — identical to one rail alone**. The two ports share a
+  single ~93 Gb/s ceiling upstream of the NICs, so enabling both cannot add bandwidth on this
+  topology. Measure this on your own hardware before investing in multi-NIC NCCL tuning;
+  community reports of NCCL multi-NIC flags (`CROSS_NIC`, `IB_QPS_PER_CONNECTION`) costing
+  2.5–6.6x throughput on GB10 are a further reason not to guess.
+- **Reduce-scatter for MoE** (vLLM PRs #46635/#47070/#47881/#48763). The code is already present
+  in a 0.27 tree, but `use_sequence_parallel_moe` is gated behind `data_parallel_size > 1`, so a
+  TP-only deployment never reaches it. That gate was deliberately restored by PR #48849 after
+  removing it caused a **5.6 GiB/GPU memory regression** — on a 121 GB unified-memory part where
+  the whole KV budget is ~8-10 GB/rank, that trades roughly 400K tokens of context for a claimed
+  low-single-digit gain whose headline benchmark was retracted by its own author. Not worth it
+  here; may be worth it on discrete-GPU nodes with memory to spare.

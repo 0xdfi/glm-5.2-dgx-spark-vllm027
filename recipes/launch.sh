@@ -128,6 +128,18 @@ log() { printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >&2; }
 #                                 boot — see docs/patches.md patch (b).
 #                                 Sizing rule: post-trim MemAvailable minus 4
 #                                 GiB fixed reserve minus 2 GiB slack.
+#   CPUSET_CPUS / CPUSET_MEMS      pin the container to specific host CPUs.
+#                                 On GB10 the 20 cores are HETEROGENEOUS and
+#                                 INTERLEAVED: cores 5-9 and 15-19 are 3.9 GHz
+#                                 Cortex-X925, cores 0-4 and 10-14 are 2.808 GHz
+#                                 Cortex-A725. Pinning to the fast set keeps the
+#                                 host critical path off the slow cores. Verify
+#                                 YOUR layout before copying this value:
+#                                   for c in $(seq 0 19); do echo -n "cpu$c "; \
+#                                     cat /sys/devices/system/cpu/cpu$c/cpufreq/cpuinfo_max_freq; done
+#                                 Measured effect (see README "2026-08-20 update"):
+#                                 +5.1% mean peak-C4 decode and a large variance
+#                                 reduction; leave empty to use all cores.
 #   PROFILE_DRAFTER_CAP            set to 1 to enable the phantom page-table
 #                                 fix (docs/patches.md patch (c)). Required
 #                                 for any MAX_NUM_BATCHED_TOKENS>=1024 boot on
@@ -145,6 +157,8 @@ MAX_LONG_PREFILLS_PER_STEP="${MAX_LONG_PREFILLS_PER_STEP:-1}"
 CUDAGRAPH_CAPTURE_SIZES="${CUDAGRAPH_CAPTURE_SIZES:-6}"
 ALLOCATOR_BUDGET_BYTES="${ALLOCATOR_BUDGET_BYTES:-}"
 PROFILE_DRAFTER_CAP="${PROFILE_DRAFTER_CAP:-}"
+CPUSET_CPUS="${CPUSET_CPUS:-}"                   # e.g. 5-9,15-19 for GB10 fast cores; empty = all cores
+CPUSET_MEMS="${CPUSET_MEMS:-}"
 
 if [[ "$DCP_SIZE" != 1 && "$DCP_SIZE" != 2 && "$DCP_SIZE" != 4 ]]; then
   echo "refusing: DCP_SIZE must be 1, 2, or 4 (tp_size=4 requires tp %% dcp == 0 — DCP3 is impossible on TP4, see docs/how-it-works.md); got '${DCP_SIZE}'" >&2
@@ -263,6 +277,7 @@ log 'all preflight checks passed'
 # section above should vary run-to-run. ─────────────────────────────────────
 COMMON=(
   --gpus all --network host --ipc host --shm-size 16g --ulimit memlock=-1:-1 --pids-limit=-1
+  ${CPUSET_CPUS:+--cpuset-cpus=${CPUSET_CPUS}} ${CPUSET_MEMS:+--cpuset-mems=${CPUSET_MEMS}}
   --device="${RDMA_DEV_UVERBS}" --device="${RDMA_DEV_RDMACM}"
   --label com.recipe.glm52.run_id="$RUN_ID"
   --label com.recipe.glm52.dcp_size="${DCP_SIZE}"
