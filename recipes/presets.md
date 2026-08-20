@@ -25,6 +25,13 @@ cluster, do not copy it verbatim.**
 
 ---
 
+
+> **2026-08-20:** every preset below should additionally carry
+> `CPUSET_CPUS=5-9,15-19 CPUSET_MEMS=0` to pin the container to GB10's 3.9 GHz cores
+> (measured +5.1% mean peak-C4 decode and a large variance reduction — see the
+> "Update — 2026-08-20" section of the README for the full data and caveats).
+> Verify your own core layout first; the fast cores are *interleaved*, not contiguous.
+
 ## DCP1 — decode-context-parallel degree 1 (no KV split; fastest decode, smallest capacity)
 
 ### DCP1 250K @ mnbt 2048
