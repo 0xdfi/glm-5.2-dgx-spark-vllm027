@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://0xdfi.example/schemas/attestation-policy.schema.json",
+  "title": "Trusted GitHub evidence issuer policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "repository", "workflow", "refs", "issuer",
+    "protected_environment", "runner_policy"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "repository": {"const": "0xdfi/glm-5.2-dgx-spark-vllm027"},
+    "workflow": {"const": ".github/workflows/attest-evidence.yml"},
+    "refs": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^refs/(heads/main|tags/v\\*)$"},
+      "contains": {"const": "refs/heads/main"}
+    },
+    "issuer": {"const": "https://token.actions.githubusercontent.com"},
+    "protected_environment": {"type": "string", "minLength": 1},
+    "runner_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["groups", "labels", "enforcement", "cryptographically_proven_by_dsse"],
+      "properties": {
+        "groups": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "labels": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "enforcement": {"const": "committed-workflow-policy"},
+        "cryptographically_proven_by_dsse": {"const": false}
+      }
+    }
+  }
+}

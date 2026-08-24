@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -u
+case "$*" in
+  *'/v1/chat/completions'*)
+    printf 'curl chat-probe %s\n' "$*" >>"${CHAMPION_FAKE_LOG:?}"
+    printf '%s\n' '{"choices":[{"message":{"content":"SPARK_OK"}}]}'
+    ;;
+  *'/v1/models'*)
+    printf 'curl models %s\n' "$*" >>"${CHAMPION_FAKE_LOG:?}"
+    case "${CHAMPION_ACTIVE_PROFILE:-fast}" in
+      balanced) length=650000 ;;
+      large) length=1000000 ;;
+      *) length=320000 ;;
+    esac
+    printf '{"data":[{"id":"glm-5.2","max_model_len":%s}]}\n' "$length"
+    ;;
+  *)
+    printf 'curl health %s\n' "$*" >>"${CHAMPION_FAKE_LOG:?}"
+    printf '%s\n' '{}'
+    ;;
+esac

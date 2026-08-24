@@ -1,0 +1,20 @@
+{
+  "claims": [
+    {"claim": "source-complete", "receipt_ids": [], "status": "pending", "subject": {}},
+    {"claim": "model-license", "reason": "Checkpoint and W8 sidecar redistribution/use rights are not yet verified by trusted evidence.", "receipt_ids": [], "status": "blocked", "subject": {}},
+    {"claim": "clean-build", "reason": "No trusted isolated ARM64 clean-build evidence exists.", "receipt_ids": [], "status": "blocked", "subject": {}},
+    {"claim": "bit-reproducible", "reason": "Two trusted distinct clean builds have not been compared.", "receipt_ids": [], "status": "blocked", "subject": {}},
+    {"claim": "live-launch", "profile": "fast-320k", "reason": "Clean-build and model-license gates are not passed.", "receipt_ids": [], "status": "blocked", "subject": {}},
+    {"claim": "benchmark-reproduced", "profile": "fast-320k", "reason": "Trusted live-launch and three-valid-in-five battery evidence is absent.", "receipt_ids": [], "status": "blocked", "subject": {}},
+    {"claim": "live-launch", "profile": "balanced-650k", "reason": "Clean-build and model-license gates are not passed.", "receipt_ids": [], "status": "blocked", "subject": {}},
+    {"claim": "benchmark-reproduced", "profile": "balanced-650k", "reason": "Trusted live-launch and three-valid-in-five battery evidence is absent.", "receipt_ids": [], "status": "blocked", "subject": {}},
+    {"claim": "live-launch", "profile": "large-1m", "reason": "Clean-build and model-license gates are not passed.", "receipt_ids": [], "status": "blocked", "subject": {}},
+    {"claim": "benchmark-reproduced", "profile": "large-1m", "reason": "Trusted live-launch and three-valid-in-five battery evidence is absent.", "receipt_ids": [], "status": "blocked", "subject": {}},
+    {"claim": "three-profile-suite", "reason": "All three profile live-launch and benchmark gates are not passed.", "receipt_ids": [], "status": "blocked", "subject": {}},
+    {"claim": "anonymous-readback", "reason": "No trusted anonymous clean-checkout/readback evidence exists.", "receipt_ids": [], "status": "blocked", "subject": {}},
+    {"claim": "convenience-image-published", "reason": "Registry redistribution clearance and publication attestation are absent.", "receipt_ids": [], "status": "blocked", "subject": {}},
+    {"claim": "convenience-image-readback", "reason": "No convenience image has been published by immutable digest.", "receipt_ids": [], "status": "blocked", "subject": {}}
+  ],
+  "schema_version": "1.0.0",
+  "updated_at": "2026-08-23T00:00:00Z"
+}

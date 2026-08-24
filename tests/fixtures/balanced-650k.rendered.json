@@ -1,0 +1,361 @@
+{
+  "container_env": [
+    [
+      "CUDA_DEVICE_MAX_CONNECTIONS",
+      "4"
+    ],
+    [
+      "CUDA_MODULE_LOADING",
+      "LAZY"
+    ],
+    [
+      "FLASHINFER_ENABLE_AOT",
+      "1"
+    ],
+    [
+      "FLASHINFER_MOE_CLEANUP",
+      "0"
+    ],
+    [
+      "FLASHINFER_MOE_CUMSUM",
+      "1"
+    ],
+    [
+      "FLASHINFER_MOE_CUMSUM_DEVICE",
+      "1"
+    ],
+    [
+      "GLOO_SOCKET_IFNAME",
+      "fabric0"
+    ],
+    [
+      "KV_FP8_ROPE",
+      "1"
+    ],
+    [
+      "NCCL_BUFFSIZE",
+      "4194304"
+    ],
+    [
+      "NCCL_CUMEM_ENABLE",
+      "0"
+    ],
+    [
+      "NCCL_CUMEM_HOST_ENABLE",
+      "0"
+    ],
+    [
+      "NCCL_DMABUF_ENABLE",
+      "0"
+    ],
+    [
+      "NCCL_GRAPH_REGISTER",
+      "0"
+    ],
+    [
+      "NCCL_IB_DISABLE",
+      "0"
+    ],
+    [
+      "NCCL_IB_GID_INDEX",
+      "3"
+    ],
+    [
+      "NCCL_IB_HCA",
+      "rdma0"
+    ],
+    [
+      "NCCL_IB_PCI_RELAXED_ORDERING",
+      "1"
+    ],
+    [
+      "NCCL_IB_QPS_PER_CONNECTION",
+      "4"
+    ],
+    [
+      "NCCL_IB_SPLIT_DATA_ON_QPS",
+      "1"
+    ],
+    [
+      "NCCL_IB_TC",
+      "106"
+    ],
+    [
+      "NCCL_LOCAL_REGISTER",
+      "0"
+    ],
+    [
+      "NCCL_MAX_NCHANNELS",
+      "4"
+    ],
+    [
+      "NCCL_MIN_NCHANNELS",
+      "4"
+    ],
+    [
+      "NCCL_NET_GDR_LEVEL",
+      "PHB"
+    ],
+    [
+      "NCCL_P2P_DISABLE",
+      "0"
+    ],
+    [
+      "NCCL_RAS_ENABLE",
+      "0"
+    ],
+    [
+      "NCCL_SHM_DISABLE",
+      "1"
+    ],
+    [
+      "NCCL_SOCKET_IFNAME",
+      "fabric0"
+    ],
+    [
+      "PYTHONDONTWRITEBYTECODE",
+      "1"
+    ],
+    [
+      "PYTHONUNBUFFERED",
+      "1"
+    ],
+    [
+      "RAY_DEDUP_LOGS",
+      "0"
+    ],
+    [
+      "RAY_memory_monitor_refresh_ms",
+      "0"
+    ],
+    [
+      "TORCH_NCCL_ASYNC_ERROR_HANDLING",
+      "1"
+    ],
+    [
+      "VLLM_ADAPTIVE_SPEC_DEPTHS",
+      "2,4,5"
+    ],
+    [
+      "VLLM_B12X_MLA_SPEC_EXTEND_AS_DECODE",
+      "0"
+    ],
+    [
+      "VLLM_BUILDA_BMM",
+      "1"
+    ],
+    [
+      "VLLM_DCP_GLOBAL_TOPK",
+      "1"
+    ],
+    [
+      "VLLM_DCP_Q_REPLICATE",
+      "0"
+    ],
+    [
+      "VLLM_DISABLE_COMPILE_CACHE",
+      "0"
+    ],
+    [
+      "VLLM_DISABLE_PYNCCL",
+      "0"
+    ],
+    [
+      "VLLM_DISTRIBUTED_USE_SPLIT_GROUP",
+      "0"
+    ],
+    [
+      "VLLM_LMHEAD_V2_REQUIRE",
+      "1"
+    ],
+    [
+      "VLLM_LMHEAD_V2_SIDECAR",
+      "/models/lmhead_w8v2_sidecar.safetensors"
+    ],
+    [
+      "VLLM_LMHEAD_V2_TOPM",
+      "64"
+    ],
+    [
+      "VLLM_MARLIN_USE_ATOMIC_ADD",
+      "1"
+    ],
+    [
+      "VLLM_MOE_MARLIN_ATOMIC_ADD",
+      "1"
+    ],
+    [
+      "VLLM_NVFP4_ALLOW_SLOW_FALLBACK",
+      "0"
+    ],
+    [
+      "VLLM_NVFP4_GEMM_BACKEND",
+      "flashinfer-cutlass"
+    ],
+    [
+      "VLLM_NVFP4_MOE_DETERMINISTIC",
+      "0"
+    ],
+    [
+      "VLLM_QUANTIZATION_DISABLE_FUSED_MOE",
+      "0"
+    ],
+    [
+      "VLLM_USE_B12X_SPARSE_INDEXER",
+      "1"
+    ],
+    [
+      "VLLM_USE_NVFP4_FLASHINFER_MOE",
+      "1"
+    ],
+    [
+      "VLLM_WORKER_MULTIPROC_METHOD",
+      "spawn"
+    ]
+  ],
+  "expected_engine_core": {
+    "adaptive_mtp": {
+      "k": [
+        2,
+        4,
+        5
+      ],
+      "max_tokens": 5,
+      "window": 32
+    },
+    "allocator": {
+      "budget": "none",
+      "profile_drafter_cap": 0,
+      "scope": "none"
+    },
+    "async_scheduling": true,
+    "attention_backend": "B12X_MLA_SPARSE",
+    "dcp_communication": "a2a",
+    "dcp_kv_interleave": 1,
+    "decode_context_parallel_size": 2,
+    "decode_prefill_tokens": 1024,
+    "enable_prefix_caching": true,
+    "fuse_gemm_comms": false,
+    "graph_capture_sizes": [
+      6,
+      12,
+      18,
+      24
+    ],
+    "graph_mode": "FULL",
+    "kv_cache_bytes_per_rank": 10395482112,
+    "kv_cache_dtype": "nvfp4_ds_mla",
+    "max_model_len": 650000,
+    "max_num_batched_tokens": 2048,
+    "max_num_seqs": 4,
+    "moe_backend": "marlin",
+    "pipeline_parallel_size": 1,
+    "prefill_context_parallel_size": 1,
+    "sidecar_required": true,
+    "tensor_parallel_size": 4
+  },
+  "host_actions": {
+    "boot_cpuset": null,
+    "post_health_cpuset": null,
+    "post_health_memory_node": null,
+    "rollback_cpuset": null,
+    "rollback_memory_node": null
+  },
+  "model": {
+    "checkpoint_identity": "glm52-dfi-hybrid-corrected-v4-lmheadw8v2",
+    "checkpoint_lock": "models/checkpoint.lock.json",
+    "integrity_status": "unknown",
+    "rights_status": "unknown",
+    "sidecar_identity": "lmhead_w8v2_sidecar.safetensors",
+    "sidecar_lock": "models/sidecar.lock.json"
+  },
+  "model_claim": "blocked-until-complete-hashes-and-rights",
+  "ordered_argv": [
+    "python3",
+    "-m",
+    "vllm.entrypoints.openai.api_server",
+    "--model",
+    "/models",
+    "--tokenizer",
+    "/models",
+    "--served-model-name",
+    "glm-5.2",
+    "--trust-remote-code",
+    "--load-format",
+    "auto",
+    "--quantization",
+    "compressed-tensors",
+    "--distributed-executor-backend",
+    "ray",
+    "--tensor-parallel-size",
+    "4",
+    "--pipeline-parallel-size",
+    "1",
+    "--prefill-context-parallel-size",
+    "1",
+    "--decode-context-parallel-size",
+    "2",
+    "--dcp-comm-backend",
+    "a2a",
+    "--dcp-kv-cache-interleave-size",
+    "1",
+    "--gpu-memory-utilization",
+    "0.90",
+    "--max-model-len",
+    "650000",
+    "--max-num-seqs",
+    "4",
+    "--max-num-batched-tokens",
+    "2048",
+    "--generation-config",
+    "vllm",
+    "--port",
+    "8211",
+    "--host",
+    "0.0.0.0",
+    "--no-enable-flashinfer-autotune",
+    "--no-enable-log-requests",
+    "--kv-cache-memory-bytes",
+    "10395482112",
+    "--kv-cache-dtype",
+    "nvfp4_ds_mla",
+    "--attention-backend",
+    "B12X_MLA_SPARSE",
+    "--moe-backend",
+    "marlin",
+    "--reasoning-parser",
+    "glm45",
+    "--tool-call-parser",
+    "glm47",
+    "--enable-auto-tool-choice",
+    "--speculative-config",
+    "{\"adaptive_speculative_tokens_window\":32,\"attention_backend\":\"B12X_MLA_SPARSE\",\"draft_sample_method\":\"probabilistic\",\"method\":\"mtp\",\"moe_backend\":\"marlin\",\"num_speculative_tokens\":5,\"quantization\":\"compressed-tensors\",\"rejection_sample_method\":\"block\"}",
+    "--long-prefill-token-threshold",
+    "2048",
+    "--async-scheduling",
+    "--enable-decode-aware-prefill",
+    "--decode-prefill-token-budget",
+    "1024",
+    "--idle-prefill-token-budget",
+    "2048",
+    "--max-long-prefills-per-step",
+    "1",
+    "--compilation-config",
+    "{\"cudagraph_mode\":\"FULL\",\"cudagraph_capture_sizes\":[6,12,18,24],\"pass_config\":{\"fuse_gemm_comms\":false}}",
+    "--enable-prefix-caching"
+  ],
+  "preset": "balanced-650k",
+  "profile": "balanced",
+  "schema_version": "1.0.0",
+  "site": {
+    "api_host": "api-coordinator",
+    "api_port": "8211",
+    "fabric_ips": "fabric-a,fabric-b,fabric-c,fabric-d",
+    "hosts": "node-a,node-b,node-c,node-d",
+    "ib_hca": "rdma0",
+    "image_ref": "champion-runtime@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "model_mount": "/models/champion",
+    "rdma_interface": "fabric0",
+    "run_id": "fixture-run"
+  }
+}

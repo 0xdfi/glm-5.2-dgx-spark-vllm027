@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://0xdfi.example/schemas/preset.schema.json",
+  "title": "Champion runtime preset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "name", "profile", "model", "effective_engine"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "name": {"enum": ["fast-320k", "balanced-650k", "large-1m"]},
+    "profile": {"enum": ["fast", "balanced", "large"]},
+    "model": {"$ref": "#/$defs/model"},
+    "effective_engine": {"$ref": "#/$defs/effectiveEngine"},
+    "container_env": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[A-Z][A-Z0-9_]*$"},
+      "additionalProperties": {"type": "string"}
+    },
+    "host_actions": {"$ref": "#/$defs/hostActions"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "model": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["checkpoint_sha256", "sidecar_sha256"],
+          "properties": {
+            "checkpoint_sha256": {"$ref": "#/$defs/sha256"},
+            "sidecar_sha256": {"$ref": "#/$defs/sha256"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "checkpoint_lock",
+            "sidecar_lock",
+            "checkpoint_identity",
+            "sidecar_identity",
+            "integrity_status",
+            "rights_status"
+          ],
+          "properties": {
+            "checkpoint_lock": {"const": "models/checkpoint.lock.json"},
+            "sidecar_lock": {"const": "models/sidecar.lock.json"},
+            "checkpoint_identity": {"const": "glm52-dfi-hybrid-corrected-v4-lmheadw8v2"},
+            "sidecar_identity": {"const": "lmhead_w8v2_sidecar.safetensors"},
+            "integrity_status": {"enum": ["complete", "unknown"]},
+            "rights_status": {"enum": ["verified", "unknown"]}
+          }
+        }
+      ]
+    },
+    "hostActions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "boot_cpuset",
+        "post_health_cpuset",
+        "post_health_memory_node",
+        "rollback_cpuset",
+        "rollback_memory_node"
+      ],
+      "properties": {
+        "boot_cpuset": {"type": ["string", "null"]},
+        "post_health_cpuset": {"type": ["string", "null"]},
+        "post_health_memory_node": {"type": ["string", "null"]},
+        "rollback_cpuset": {"type": ["string", "null"]},
+        "rollback_memory_node": {"type": ["string", "null"]}
+      }
+    },
+    "effectiveEngine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tensor_parallel_size",
+        "pipeline_parallel_size",
+        "prefill_context_parallel_size",
+        "decode_context_parallel_size",
+        "max_model_len",
+        "max_num_seqs",
+        "max_num_batched_tokens",
+        "decode_prefill_tokens",
+        "kv_cache_bytes_per_rank",
+        "graph_mode",
+        "graph_capture_sizes",
+        "attention_backend",
+        "enable_prefix_caching",
+        "async_scheduling",
+        "fuse_gemm_comms",
+        "adaptive_mtp",
+        "sidecar_required"
+      ],
+      "properties": {
+        "tensor_parallel_size": {"type": "integer", "minimum": 1},
+        "pipeline_parallel_size": {"type": "integer", "minimum": 1},
+        "prefill_context_parallel_size": {"type": "integer", "minimum": 1},
+        "decode_context_parallel_size": {"type": "integer", "minimum": 1},
+        "max_model_len": {"type": "integer", "minimum": 1},
+        "max_num_seqs": {"type": "integer", "minimum": 1},
+        "max_num_batched_tokens": {"type": "integer", "minimum": 1},
+        "decode_prefill_tokens": {"type": "integer", "minimum": 1},
+        "kv_cache_bytes_per_rank": {"type": "integer", "minimum": 1},
+        "graph_mode": {"const": "FULL"},
+        "graph_capture_sizes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "integer", "minimum": 1}
+        },
+        "attention_backend": {"type": "string", "minLength": 1},
+        "kv_cache_dtype": {"type": "string", "minLength": 1},
+        "moe_backend": {"type": "string", "minLength": 1},
+        "enable_prefix_caching": {"type": "boolean"},
+        "async_scheduling": {"type": "boolean"},
+        "fuse_gemm_comms": {"const": false},
+        "dcp_communication": {"enum": ["none", "a2a"]},
+        "dcp_kv_interleave": {"type": "integer", "minimum": 0, "maximum": 1},
+        "allocator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scope", "budget", "profile_drafter_cap"],
+          "properties": {
+            "scope": {"enum": ["none", "per-host"]},
+            "budget": {"enum": ["none", "computed"]},
+            "profile_drafter_cap": {"type": "integer", "minimum": 0, "maximum": 1}
+          }
+        },
+        "adaptive_mtp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["k", "window"],
+          "properties": {
+            "k": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {"type": "integer", "minimum": 1}
+            },
+            "window": {"type": "integer", "minimum": 1},
+            "max_tokens": {"type": "integer", "minimum": 1}
+          }
+        },
+        "sidecar_required": {"const": true}
+      }
+    }
+  }
+}

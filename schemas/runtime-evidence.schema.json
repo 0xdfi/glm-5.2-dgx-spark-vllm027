@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://0xdfi.example/schemas/runtime-evidence.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "subject", "profile", "window_id", "ranks", "engine", "transport", "first_fire", "log_events"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "subject": {
+      "type": "object", "additionalProperties": false,
+      "required": ["image_digest", "build_lock_id", "model_id", "sidecar_id", "preset_id"],
+      "properties": {
+        "image_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "build_lock_id": {"$ref": "#/$defs/sha"}, "model_id": {"$ref": "#/$defs/sha"},
+        "sidecar_id": {"$ref": "#/$defs/sha"}, "preset_id": {"$ref": "#/$defs/sha"}
+      }
+    },
+    "profile": {"enum": ["fast-320k", "balanced-650k", "large-1m"]},
+    "window_id": {"type": "string", "minLength": 1},
+    "ranks": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"$ref": "#/$defs/rank"}},
+    "engine": {"$ref": "#/$defs/engine"},
+    "transport": {
+      "type": "object", "additionalProperties": false, "required": ["nccl_backend", "socket_fallback"],
+      "properties": {"nccl_backend": {"const": "IB"}, "socket_fallback": {"const": false}}
+    },
+    "first_fire": {"$ref": "#/$defs/firstFire"},
+    "log_events": {"type": "array", "items": {"$ref": "#/$defs/logEvent"}}
+  },
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "rank": {
+      "type": "object", "additionalProperties": false,
+      "required": ["rank", "host", "image_digest", "restart_count", "oom_kills"],
+      "properties": {
+        "rank": {"type": "integer", "minimum": 0, "maximum": 3}, "host": {"type": "string", "minLength": 1},
+        "image_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "restart_count": {"type": "integer", "minimum": 0}, "oom_kills": {"type": "integer", "minimum": 0}
+      }
+    },
+    "engine": {
+      "type": "object", "additionalProperties": false,
+      "required": ["max_model_len", "kv_cache_dtype", "decode_context_parallel_size", "adaptive_mtp", "graph_mode", "graph_capture_sizes", "fuse_gemm_comms"],
+      "properties": {
+        "max_model_len": {"enum": [320000, 650000, 1000000]}, "kv_cache_dtype": {"const": "nvfp4_ds_mla"},
+        "decode_context_parallel_size": {"enum": [1, 2, 4]},
+        "adaptive_mtp": {"const": [2, 4, 5]}, "graph_mode": {"const": "FULL"},
+        "graph_capture_sizes": {"const": [6, 12, 18, 24]}, "fuse_gemm_comms": {"const": false}
+      }
+    },
+    "firstFire": {
+      "type": "object", "additionalProperties": false,
+      "required": ["window_id", "build_a", "sidecar", "mtp_mapping"],
+      "properties": {"window_id": {"type": "string", "minLength": 1}, "build_a": {"const": true}, "sidecar": {"const": true}, "mtp_mapping": {"const": true}}
+    },
+    "logEvent": {
+      "type": "object", "additionalProperties": false, "required": ["phase", "severity", "code"],
+      "properties": {"phase": {"enum": ["pre-readiness", "post-readiness"]}, "severity": {"enum": ["warning", "fatal"]}, "code": {"type": "string", "minLength": 1}}
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://0xdfi.example/schemas/status.schema.json",
+  "title": "Champion publication status",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "updated_at", "claims"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "updated_at": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"},
+    "claims": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/claim"}
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim", "status", "subject", "receipt_ids"],
+      "allOf": [
+        {
+          "if": {
+            "properties": {"status": {"const": "passed"}},
+            "required": ["status"]
+          },
+          "then": {
+            "properties": {
+              "receipt_ids": {"minItems": 1},
+              "subject": {"minProperties": 1}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"status": {"enum": ["failed", "blocked"]}},
+            "required": ["status"]
+          },
+          "then": {"required": ["reason"]}
+        }
+      ],
+      "properties": {
+        "claim": {"type": "string", "minLength": 1},
+        "profile": {"enum": ["fast-320k", "balanced-650k", "large-1m"]},
+        "status": {"enum": ["pending", "passed", "failed", "blocked", "not-applicable"]},
+        "subject": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "source_release_id": {"$ref": "#/$defs/sha256"},
+            "build_subject_id": {"$ref": "#/$defs/sha256"},
+            "build_lock_id": {"$ref": "#/$defs/sha256"},
+            "source_manifest_id": {"$ref": "#/$defs/sha256"},
+            "image_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+            "model_id": {"$ref": "#/$defs/sha256"},
+            "sidecar_id": {"$ref": "#/$defs/sha256"},
+            "preset_id": {"$ref": "#/$defs/sha256"},
+            "pin_id": {"$ref": "#/$defs/sha256"},
+            "tokenizer_id": {"$ref": "#/$defs/sha256"},
+            "sampling_id": {"$ref": "#/$defs/sha256"},
+            "run_id": {"type": "string", "minLength": 1}
+          }
+        },
+        "receipt_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/sha256"}
+        },
+        "reason": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

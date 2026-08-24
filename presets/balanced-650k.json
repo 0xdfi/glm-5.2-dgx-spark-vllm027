@@ -1,0 +1,45 @@
+{
+  "container_env": {},
+  "effective_engine": {
+    "adaptive_mtp": {"k": [2, 4, 5], "max_tokens": 5, "window": 32},
+    "allocator": {"budget": "none", "profile_drafter_cap": 0, "scope": "none"},
+    "async_scheduling": true,
+    "attention_backend": "B12X_MLA_SPARSE",
+    "dcp_communication": "a2a",
+    "dcp_kv_interleave": 1,
+    "decode_context_parallel_size": 2,
+    "decode_prefill_tokens": 1024,
+    "enable_prefix_caching": true,
+    "fuse_gemm_comms": false,
+    "graph_capture_sizes": [6, 12, 18, 24],
+    "graph_mode": "FULL",
+    "kv_cache_bytes_per_rank": 10395482112,
+    "kv_cache_dtype": "nvfp4_ds_mla",
+    "max_model_len": 650000,
+    "max_num_batched_tokens": 2048,
+    "max_num_seqs": 4,
+    "moe_backend": "marlin",
+    "pipeline_parallel_size": 1,
+    "prefill_context_parallel_size": 1,
+    "sidecar_required": true,
+    "tensor_parallel_size": 4
+  },
+  "host_actions": {
+    "boot_cpuset": null,
+    "post_health_cpuset": null,
+    "post_health_memory_node": null,
+    "rollback_cpuset": null,
+    "rollback_memory_node": null
+  },
+  "model": {
+    "checkpoint_identity": "glm52-dfi-hybrid-corrected-v4-lmheadw8v2",
+    "checkpoint_lock": "models/checkpoint.lock.json",
+    "integrity_status": "unknown",
+    "rights_status": "unknown",
+    "sidecar_identity": "lmhead_w8v2_sidecar.safetensors",
+    "sidecar_lock": "models/sidecar.lock.json"
+  },
+  "name": "balanced-650k",
+  "profile": "balanced",
+  "schema_version": "1.0.0"
+}

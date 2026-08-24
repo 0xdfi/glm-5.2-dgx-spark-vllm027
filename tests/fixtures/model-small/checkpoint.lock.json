@@ -1,0 +1,38 @@
+{
+  "artifact_id": "fixture-checkpoint",
+  "artifact_type": "checkpoint",
+  "base_model": {
+    "repository": "fixture/local",
+    "revision": "1111111111111111111111111111111111111111"
+  },
+  "distribution": {
+    "method": "external-required",
+    "source": null
+  },
+  "integrity": {
+    "files": [
+      {
+        "path": "shard-000.fixture",
+        "sha256": "de3b138aa085f01bd5f297f6bafe383f3329a144aa1f23b6bff6f265f898d9b0",
+        "size": 29
+      },
+      {
+        "path": "shard-001.fixture",
+        "sha256": "7a868a62f2f954275db963f7a505ffa3e9fe906d05106db32873a1b3220d62d2",
+        "size": 29
+      }
+    ],
+    "status": "complete"
+  },
+  "rights": {
+    "evidence": [
+      {
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "source": "fixture://checkpoint-license"
+      }
+    ],
+    "license": "Apache-2.0",
+    "status": "verified-external-use"
+  },
+  "schema_version": "1.0.0"
+}

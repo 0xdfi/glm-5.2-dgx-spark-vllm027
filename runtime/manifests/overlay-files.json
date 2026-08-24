@@ -1,0 +1,1148 @@
+{
+  "b12x": {
+    "file_count": 5,
+    "files": [
+      {
+        "base_sha256": "78275bb3d1534f4c4321f610ce9c3548689a74bb3c6590ef9b067e782f0dcf76",
+        "classification": "modified",
+        "donor": {
+          "commit": "334a2d75d166becea0aa640b402d521ea0a290eb",
+          "license": "Apache-2.0",
+          "name": "B12X",
+          "repository": "https://github.com/lukealonso/b12x.git"
+        },
+        "later_champion_source": {
+          "authority": "sealed-r17-source-lineage",
+          "stage": "r17-b12x-two-level-fold-repair"
+        },
+        "path": "attention/indexer/paged.py",
+        "sha256": "d654783235800f50a9434c0463cffe7f6c50f5efe53586ca2ef388f26adb5a66",
+        "target": "b12x/attention/indexer/paged.py"
+      },
+      {
+        "base_sha256": "a19a29b80daeab710a3dea8aa3194fe931e0eee698adc8b2b4148e2b399040c2",
+        "classification": "modified",
+        "donor": {
+          "commit": "334a2d75d166becea0aa640b402d521ea0a290eb",
+          "license": "Apache-2.0",
+          "name": "B12X",
+          "repository": "https://github.com/lukealonso/b12x.git"
+        },
+        "later_champion_source": {
+          "authority": "sealed-r17-source-lineage",
+          "stage": "r17-b12x-two-level-fold-repair"
+        },
+        "path": "attention/indexer/scratch.py",
+        "sha256": "c3eb82ab405685130e4d6092960bcaf01e8e4a58e9c8f731deb0e9c1ea51c453",
+        "target": "b12x/attention/indexer/scratch.py"
+      },
+      {
+        "base_sha256": "9a4e52fe1fda8c61ec6ec96d3dae397c7fd3b1823834911e156fd274f710284b",
+        "donor": {
+          "commit": "334a2d75d166becea0aa640b402d521ea0a290eb",
+          "license": "Apache-2.0",
+          "name": "B12X",
+          "repository": "https://github.com/lukealonso/b12x.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/b12x/b12x/attention/indexer/tiled_topk.py",
+        "path": "attention/indexer/tiled_topk.py",
+        "sha256": "5fe2a8c45d5bb17559bb3003f018602cb1fae064ffcb5f7edd4f44d75a32a72f",
+        "target": "b12x/attention/indexer/tiled_topk.py"
+      },
+      {
+        "base_sha256": "7e6981cf9afdaffeccef81d028644feb5073423fed9c0cd4b622a6bf71b9c9f9",
+        "donor": {
+          "commit": "334a2d75d166becea0aa640b402d521ea0a290eb",
+          "license": "Apache-2.0",
+          "name": "B12X",
+          "repository": "https://github.com/lukealonso/b12x.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/b12x/b12x/cute/compiler.py",
+        "path": "cute/compiler.py",
+        "sha256": "bf2dea4fd01ab4edf51bbcd60c142a00b682732378d06d9c45342c58fc8be612",
+        "target": "b12x/cute/compiler.py"
+      },
+      {
+        "base_sha256": "39ccc92d23c66d98bff41aa02a9a1be4ebf62858c5216c3710a8cc874a0106d3",
+        "donor": {
+          "commit": "334a2d75d166becea0aa640b402d521ea0a290eb",
+          "license": "Apache-2.0",
+          "name": "B12X",
+          "repository": "https://github.com/lukealonso/b12x.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/b12x/b12x/integration/sparse_mla_scratch.py",
+        "path": "integration/sparse_mla_scratch.py",
+        "sha256": "c62753d70d9cbc88152ce2dfc73f38640815b0a55d594a2028b30b60aa2f3873",
+        "target": "b12x/integration/sparse_mla_scratch.py"
+      }
+    ]
+  },
+  "build_a": {
+    "active": "v0",
+    "sha256": "965b6aeaf3a0c41abefec89a31592f6b8061a053053831be7c5e6f7560857515",
+    "source": "runtime/kernels/builda_bmm_v0.py",
+    "target": "vllm/model_executor/layers/attention/builda_bmm_v0.py",
+    "v1_included": false
+  },
+  "schema_version": "1.0.0",
+  "source": {
+    "commit": "9ba54db8f7c852eabb90372f7dcf47f87eafbe20",
+    "repository": "https://github.com/0xdfi/GLM-5.2-Harness-O14-4x-DGX-Spark.git",
+    "tree": "46e1d7837747c080d7300496abe9aa5f7c0e127d"
+  },
+  "vllm": {
+    "file_count": 74,
+    "files": [
+      {
+        "base_sha256": "9fb29a33a63cd625b42a0bf000d821bb371d5eefa24a2376525fc371155afd02",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/_custom_ops.py",
+        "path": "_custom_ops.py",
+        "sha256": "9dc6ad31edad514dbae2a373cf44c18c4da0fc6209e79e7b682c78769d99fe8f",
+        "target": "vllm/_custom_ops.py"
+      },
+      {
+        "base_sha256": null,
+        "classification": "added",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/_nvfp4_ds_mla_loader.py",
+        "path": "_nvfp4_ds_mla_loader.py",
+        "sha256": "7dcfd492fef33748b963f82d9b6687fa1c1ec43fbaa52cec71c371c38dc94127",
+        "target": "vllm/_nvfp4_ds_mla_loader.py"
+      },
+      {
+        "base_sha256": null,
+        "classification": "added",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/compilation/b12x_capture.py",
+        "path": "compilation/b12x_capture.py",
+        "sha256": "415c8256d04ceec82956d739e7d23a441f2b53975ce39ecc30333e7867e6e322",
+        "target": "vllm/compilation/b12x_capture.py"
+      },
+      {
+        "base_sha256": "0b603decec7487138e97b9cafbad9684ec22c8052f52a227236d1151a03aa34f",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/config/cache.py",
+        "path": "config/cache.py",
+        "sha256": "7e713db60c2cfa6ac37b04517ee8d6dd0f63087073e72382c1d062105fa0fb1b",
+        "target": "vllm/config/cache.py"
+      },
+      {
+        "base_sha256": "3cf5d41a5d662ab0eada6f3128e2538abc0a250d6aef82acab7df7dd84e498bc",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/config/scheduler.py",
+        "path": "config/scheduler.py",
+        "sha256": "02baf920dd3f195efc8098f1da90e09ca4e6b3432aeb69326d280e4882524a7f",
+        "target": "vllm/config/scheduler.py"
+      },
+      {
+        "base_sha256": "83cbb26932b9ec0633753b58e8fe666f55c779580b32fba750cf569cde67c40c",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/config/speculative.py",
+        "path": "config/speculative.py",
+        "sha256": "8e0a1e683195ea38d56d163469e284c401cf6e67d7e5101baeae3ee209f6261e",
+        "target": "vllm/config/speculative.py"
+      },
+      {
+        "base_sha256": "66e82e95c5cdbb88715e25feb65f4cc2be83cd67bff5b5f703d52dea43a0815e",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/config/vllm.py",
+        "path": "config/vllm.py",
+        "sha256": "5875954216b765032b32058d7fcdd2e253f8b3066bb2dc7d9142e0c4005eec81",
+        "target": "vllm/config/vllm.py"
+      },
+      {
+        "base_sha256": "bbad6969765f3c5eb48ec1b42c458464ba58841c26244a6d42f293ec199bcbe2",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/distributed/parallel_state.py",
+        "path": "distributed/parallel_state.py",
+        "sha256": "3edf727e9eb5db3f234aa1958fa3a3c3eb0c635e6ff5ed92f7036c36f539bbec",
+        "target": "vllm/distributed/parallel_state.py"
+      },
+      {
+        "base_sha256": "165f9ec6e3b067bb7e6c72d68adedde7fa4d5ed7932fa7568064b9d9086e6830",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/engine/arg_utils.py",
+        "path": "engine/arg_utils.py",
+        "sha256": "4132ac6cd0eabf29dcf14d0c22decfb9d7595be5d78e2b112d5622fca88abf78",
+        "target": "vllm/engine/arg_utils.py"
+      },
+      {
+        "base_sha256": "272c01ff03e52cdfaed6fc7bc2e3e5f641d35910ea0bf5365b928c9401c4df5f",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/model_executor/layers/attention/mla_attention.py",
+        "path": "model_executor/layers/attention/mla_attention.py",
+        "sha256": "832ca14c86ed08787ff44f0a2fe11b171212e5d39a027423ffd109bdc380cdb3",
+        "target": "vllm/model_executor/layers/attention/mla_attention.py"
+      },
+      {
+        "base_sha256": "7b2c444fd56462f98c16f25c4cfa4d7b95ea483b0529b15d0612f7dbc8b06b5c",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/model_executor/layers/fused_moe/experts/marlin_moe.py",
+        "path": "model_executor/layers/fused_moe/experts/marlin_moe.py",
+        "sha256": "7219771f1143b6456bc755e6b08ed545dfc77618a8b9623d54e7432917f1491f",
+        "target": "vllm/model_executor/layers/fused_moe/experts/marlin_moe.py"
+      },
+      {
+        "base_sha256": "46c9e079b5428e8d6a0140042c827206ce4b50050b515ebe8cf8f65c6e96da89",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/model_executor/layers/logits_processor.py",
+        "path": "model_executor/layers/logits_processor.py",
+        "sha256": "5ab8890051bf82da012a2c7357bda60fb011469ebf42ff647fffba8416fe4dfa",
+        "target": "vllm/model_executor/layers/logits_processor.py"
+      },
+      {
+        "base_sha256": "a6386326379dcf94439a0b020cd51a71ebfd0a36eaeb563417c821456b82a475",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "later_champion_source": {
+          "authority": "sealed-r17-source-lineage",
+          "stage": "r17-dcp2-v12l+dcp4-b4"
+        },
+        "o14_predecessor_path": "reproducibility/overlays/vllm/vllm/model_executor/layers/sparse_attn_indexer.py",
+        "path": "model_executor/layers/sparse_attn_indexer.py",
+        "sha256": "113d85a97d7f4ef1047ebd2381e09b0a83bc7346f35bd2265100fabc9f3580fc",
+        "target": "vllm/model_executor/layers/sparse_attn_indexer.py"
+      },
+      {
+        "base_sha256": "83a52a68c0e2c3cd032cf0aff2c58570d87cf094f41f3a031208d1a74f6a2ede",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "later_champion_source": {
+          "authority": "sealed-r17-source-lineage",
+          "stage": "r17-dcp2-v12l"
+        },
+        "o14_predecessor_path": "reproducibility/overlays/vllm/vllm/model_executor/models/deepseek_mtp.py",
+        "path": "model_executor/models/deepseek_mtp.py",
+        "sha256": "c40240abf3acd15cc18376744cd8046673c8ec2b3b18c61813ba029b65cbc010",
+        "target": "vllm/model_executor/models/deepseek_mtp.py"
+      },
+      {
+        "base_sha256": "bcbd9cde689ffe3f5f271aff3a5e01351b05a68371192cac9d65cb5ffc6b4ba9",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "later_champion_source": {
+          "authority": "sealed-r17-source-lineage",
+          "stage": "r17-dcp2-late-dcp-bind"
+        },
+        "path": "model_executor/models/deepseek_v2.py",
+        "sha256": "c83ad34fa2477c425606effb6816621379029886c1fa81ea8bdcbe76ffd948ea",
+        "target": "vllm/model_executor/models/deepseek_v2.py"
+      },
+      {
+        "base_sha256": "17e7f5e9b53266d7e59a6495e5f87512d0464c98644e4c616c33b5592a91d1e6",
+        "classification": "modified",
+        "donor": {
+          "commit": "a8f794d1251cbfd88a5011445dd5582289c727e4",
+          "license": "MIT",
+          "name": "FlashMLA",
+          "repository": "https://github.com/vllm-project/FlashMLA.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/third_party/flashmla/flash_mla_interface.py",
+        "path": "third_party/flashmla/flash_mla_interface.py",
+        "sha256": "91a9915f43dc61585544f1f55837972f105d7981b7b33c937bc9c5c91c1bed36",
+        "target": "vllm/third_party/flashmla/flash_mla_interface.py"
+      },
+      {
+        "base_sha256": "31703d7cbd695071081b61dee168f7c6bf0fc62cbb819470d72a6647ac7e0f47",
+        "classification": "modified",
+        "donor": {
+          "commit": "087c161814d4d9c735b46c21212a09e5f8eb92fa",
+          "license": "MIT",
+          "name": "MSA",
+          "repository": "https://github.com/vllm-project/MSA.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/third_party/fmha_sm100/cute/interface.py",
+        "path": "third_party/fmha_sm100/cute/interface.py",
+        "sha256": "72b62c09a24d828c7d05efcbc18cc1a7616fa7797877a972c2a7e62e8043d16d",
+        "target": "vllm/third_party/fmha_sm100/cute/interface.py"
+      },
+      {
+        "base_sha256": "bd9a73e4bb34dbb333c672e64b99beb7a4ce400691b300f1dd486bfa320650e7",
+        "classification": "modified",
+        "donor": {
+          "commit": "087c161814d4d9c735b46c21212a09e5f8eb92fa",
+          "license": "MIT",
+          "name": "MSA",
+          "repository": "https://github.com/vllm-project/MSA.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/third_party/fmha_sm100/cute/sparse_index_utils.py",
+        "path": "third_party/fmha_sm100/cute/sparse_index_utils.py",
+        "sha256": "da1953b87dbc5ecc4ce1c13ca520461879ea117d207720a760e06f2022e39c24",
+        "target": "vllm/third_party/fmha_sm100/cute/sparse_index_utils.py"
+      },
+      {
+        "base_sha256": "f4a3c2bdb120e7e962d0ec3314f6099933eac1ad4421b87c4d06d6f37f1cac24",
+        "classification": "modified",
+        "donor": {
+          "commit": "087c161814d4d9c735b46c21212a09e5f8eb92fa",
+          "license": "MIT",
+          "name": "MSA",
+          "repository": "https://github.com/vllm-project/MSA.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/third_party/fmha_sm100/cute/src/common/tma_utils.py",
+        "path": "third_party/fmha_sm100/cute/src/common/tma_utils.py",
+        "sha256": "829026061e7c54e7c74608594c26d0e524296c0632d25167a6f21c1522c135bf",
+        "target": "vllm/third_party/fmha_sm100/cute/src/common/tma_utils.py"
+      },
+      {
+        "base_sha256": "77cc4886562edb3056ef088e6d67789b41c79e622eeca915be4afe68a7fb6b72",
+        "classification": "modified",
+        "donor": {
+          "commit": "087c161814d4d9c735b46c21212a09e5f8eb92fa",
+          "license": "MIT",
+          "name": "MSA",
+          "repository": "https://github.com/vllm-project/MSA.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/third_party/fmha_sm100/cute/src/common/utils.py",
+        "path": "third_party/fmha_sm100/cute/src/common/utils.py",
+        "sha256": "757b836337e27d3b70ca4d6792a08c0b6918456142e78311e26cb021dd7d14ba",
+        "target": "vllm/third_party/fmha_sm100/cute/src/common/utils.py"
+      },
+      {
+        "base_sha256": "9fcd178faa1332085a4e1afbf2f6efbcd19c8e3a7b3254f4a176a5d7adb8c966",
+        "classification": "modified",
+        "donor": {
+          "commit": "087c161814d4d9c735b46c21212a09e5f8eb92fa",
+          "license": "MIT",
+          "name": "MSA",
+          "repository": "https://github.com/vllm-project/MSA.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/third_party/fmha_sm100/cute/src/sm100/build_k2q_csr/__init__.py",
+        "path": "third_party/fmha_sm100/cute/src/sm100/build_k2q_csr/__init__.py",
+        "sha256": "d0fe70a55f7c363bde2caea9d069c40dc5e03ed39443e7fc14d80b05dbeee13c",
+        "target": "vllm/third_party/fmha_sm100/cute/src/sm100/build_k2q_csr/__init__.py"
+      },
+      {
+        "base_sha256": "67c5cc46bd24f4fca6b70034e331e20d43de80f5d2f9d399955bdac74fc39e6a",
+        "classification": "modified",
+        "donor": {
+          "commit": "087c161814d4d9c735b46c21212a09e5f8eb92fa",
+          "license": "MIT",
+          "name": "MSA",
+          "repository": "https://github.com/vllm-project/MSA.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/third_party/fmha_sm100/cute/src/sm100/build_k2q_csr/build_k2q_csr.cu",
+        "path": "third_party/fmha_sm100/cute/src/sm100/build_k2q_csr/build_k2q_csr.cu",
+        "sha256": "5c34f70ea9c5a71ae700bf9f7ac88fd13dee52115300f7811df00fb4faae1f98",
+        "target": "vllm/third_party/fmha_sm100/cute/src/sm100/build_k2q_csr/build_k2q_csr.cu"
+      },
+      {
+        "base_sha256": "69b615bcbeaacd1fd87446870c3dbd5e65300549590f5477701b1cd51dc65510",
+        "classification": "modified",
+        "donor": {
+          "commit": "087c161814d4d9c735b46c21212a09e5f8eb92fa",
+          "license": "MIT",
+          "name": "MSA",
+          "repository": "https://github.com/vllm-project/MSA.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/third_party/fmha_sm100/cute/src/sm100/fwd/atten_fwd.py",
+        "path": "third_party/fmha_sm100/cute/src/sm100/fwd/atten_fwd.py",
+        "sha256": "1f19d8b59e914adafc73e2b99b6d31820d7fc13f7e0f32dfd4f6f4f32e6838a1",
+        "target": "vllm/third_party/fmha_sm100/cute/src/sm100/fwd/atten_fwd.py"
+      },
+      {
+        "base_sha256": "e9ae56a026259de916b73e1e5d25c4bfb5a03d4e324c522fa82f336a7da064a8",
+        "classification": "modified",
+        "donor": {
+          "commit": "087c161814d4d9c735b46c21212a09e5f8eb92fa",
+          "license": "MIT",
+          "name": "MSA",
+          "repository": "https://github.com/vllm-project/MSA.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/third_party/fmha_sm100/cute/src/sm100/fwd/atten_fwd_nvfp4_kv.py",
+        "path": "third_party/fmha_sm100/cute/src/sm100/fwd/atten_fwd_nvfp4_kv.py",
+        "sha256": "e8796ba3e7717beac28b638fc6c337c5260d77fbce6dd4307e76200888596338",
+        "target": "vllm/third_party/fmha_sm100/cute/src/sm100/fwd/atten_fwd_nvfp4_kv.py"
+      },
+      {
+        "base_sha256": "ab4e35f985460a6a90fc5493cb014894d52fd000b44a6109996bc8b8c8e66c21",
+        "classification": "modified",
+        "donor": {
+          "commit": "087c161814d4d9c735b46c21212a09e5f8eb92fa",
+          "license": "MIT",
+          "name": "MSA",
+          "repository": "https://github.com/vllm-project/MSA.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/third_party/fmha_sm100/cute/src/sm100/fwd_decode/atten_fwd.py",
+        "path": "third_party/fmha_sm100/cute/src/sm100/fwd_decode/atten_fwd.py",
+        "sha256": "d4c3a60a6a360c94f3d804bb97b0832e76faca7296e8f43f08b249af08ba12ee",
+        "target": "vllm/third_party/fmha_sm100/cute/src/sm100/fwd_decode/atten_fwd.py"
+      },
+      {
+        "base_sha256": "ea67a3147fd0eb3ea6a66857af72a5c18822ccb0a1e549398eb354df9492d147",
+        "classification": "modified",
+        "donor": {
+          "commit": "087c161814d4d9c735b46c21212a09e5f8eb92fa",
+          "license": "MIT",
+          "name": "MSA",
+          "repository": "https://github.com/vllm-project/MSA.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/third_party/fmha_sm100/cute/src/sm100/fwd_decode/tile_scheduler.py",
+        "path": "third_party/fmha_sm100/cute/src/sm100/fwd_decode/tile_scheduler.py",
+        "sha256": "5f37f92d0d6a76b8e06748e2a81be9c9d490f46baf73efa11afb951ea361590c",
+        "target": "vllm/third_party/fmha_sm100/cute/src/sm100/fwd_decode/tile_scheduler.py"
+      },
+      {
+        "base_sha256": "ad04914b94b5eeac425fa7ff8ddabde057a8795588f27727c4bbcebb4740cdc4",
+        "classification": "modified",
+        "donor": {
+          "commit": "087c161814d4d9c735b46c21212a09e5f8eb92fa",
+          "license": "MIT",
+          "name": "MSA",
+          "repository": "https://github.com/vllm-project/MSA.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/third_party/fmha_sm100/cute/src/sm100/prepare_k2q_csr.py",
+        "path": "third_party/fmha_sm100/cute/src/sm100/prepare_k2q_csr.py",
+        "sha256": "429ab94135902eec524ec8a0db31857aa51b067c525330b2009412384601199f",
+        "target": "vllm/third_party/fmha_sm100/cute/src/sm100/prepare_k2q_csr.py"
+      },
+      {
+        "base_sha256": "4b439b2ba954e5b4d9d4f86f9a26135ab995ba7d71f74a4d9f1763168921b406",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/utils/torch_utils.py",
+        "path": "utils/torch_utils.py",
+        "sha256": "217b3645c88bd43c4701875b9b47420df9e90dedab13e869e86e3a18124d2a7f",
+        "target": "vllm/utils/torch_utils.py"
+      },
+      {
+        "base_sha256": null,
+        "classification": "added",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/attention/backends/mla/b12x_mla_sparse.py",
+        "path": "v1/attention/backends/mla/b12x_mla_sparse.py",
+        "sha256": "3b9fec983cb3ac96b8a647a7c628d56a39392a363f99cf92c64fbd8dabbf55d1",
+        "target": "vllm/v1/attention/backends/mla/b12x_mla_sparse.py"
+      },
+      {
+        "base_sha256": "9b355adda249c7b9d72567d1a6d8e0e66e330a3bdd74a09f2744cfc8d6e2ced9",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/attention/backends/mla/indexer.py",
+        "path": "v1/attention/backends/mla/indexer.py",
+        "sha256": "1c76b608949330437e4fa23ff86e4396dc118f1aa55b27497dad53a5f627a8a4",
+        "target": "vllm/v1/attention/backends/mla/indexer.py"
+      },
+      {
+        "base_sha256": "a15a5767a6afe1427dccc395d7125d3f8f2b701b859c31eec91918d04d5761b4",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "later_champion_source": {
+          "authority": "sealed-r17-source-lineage",
+          "stage": "r17-dcp2-v3+dcp4"
+        },
+        "path": "v1/attention/backends/mla/sparse_utils.py",
+        "sha256": "7e1ca1c76b81c09f6198dd51e4649b4cd1ae0314311d1604464c3566ff624adf",
+        "target": "vllm/v1/attention/backends/mla/sparse_utils.py"
+      },
+      {
+        "base_sha256": "d6be791fcf590e06a177db6a830c06d32a22c57e13af9c1eab5f2417d0cde745",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/attention/backends/registry.py",
+        "path": "v1/attention/backends/registry.py",
+        "sha256": "8a247140a6ac25ac4b37ac9cc2c49c182aac38b01310d8f7e665abf7a767099e",
+        "target": "vllm/v1/attention/backends/registry.py"
+      },
+      {
+        "base_sha256": "c67bda2886b52865ddafabaae7d797c359e930752f374421a33e537d94a5f45a",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/core/sched/scheduler.py",
+        "path": "v1/core/sched/scheduler.py",
+        "sha256": "37861e012864d9f7ccf8c917522376240c81b57d4faa696f9424dab65c9d4c46",
+        "target": "vllm/v1/core/sched/scheduler.py"
+      },
+      {
+        "base_sha256": "bfbd62f02d900faf043ce0aeb46de0a10d7ce531351fced789805a6b817a7f80",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/kv_cache_interface.py",
+        "path": "v1/kv_cache_interface.py",
+        "sha256": "409925da986214d4ac2256877c49db8431a2a4295d79b8c72c5f55539ac0afda",
+        "target": "vllm/v1/kv_cache_interface.py"
+      },
+      {
+        "base_sha256": null,
+        "classification": "added",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/spec_decode/dynamic/acceptance_length.py",
+        "path": "v1/spec_decode/dynamic/acceptance_length.py",
+        "sha256": "4b4e17521cb9bb22e2b8062e57f6bee43c170abc54d3b126bef409706cf3fbd9",
+        "target": "vllm/v1/spec_decode/dynamic/acceptance_length.py"
+      },
+      {
+        "base_sha256": null,
+        "classification": "added",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/spec_decode/dynamic/depth_ladder.py",
+        "path": "v1/spec_decode/dynamic/depth_ladder.py",
+        "sha256": "674487015cd59f5528c98517276f59a5c78a79b510dc93e2ab06989b6a338e9f",
+        "target": "vllm/v1/spec_decode/dynamic/depth_ladder.py"
+      },
+      {
+        "base_sha256": "33b0bff7b92e00a915bad64914977b61b7f713506862d8785e102d20e2b90c01",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/worker/gpu/cudagraph_utils.py",
+        "path": "v1/worker/gpu/cudagraph_utils.py",
+        "sha256": "e07c39092588abb7a6b8e725350dfd249946edeb7c6a6316cf03cb5a1655c258",
+        "target": "vllm/v1/worker/gpu/cudagraph_utils.py"
+      },
+      {
+        "base_sha256": "60fb531a045d6879da25f57cdb95584cc5272e4ef33b69e6b9c2ff3acbd78f8a",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/worker/gpu/model_runner.py",
+        "path": "v1/worker/gpu/model_runner.py",
+        "sha256": "427ea9863494ff8dd2b7be7aeed37bbc60eed168a37605be58b93496d3b52d9f",
+        "target": "vllm/v1/worker/gpu/model_runner.py"
+      },
+      {
+        "base_sha256": "861f198fa2382ffc7d10e275bec5a543a998b249c65e73a2e5852545c743048b",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/worker/gpu/spec_decode/autoregressive/speculator.py",
+        "path": "v1/worker/gpu/spec_decode/autoregressive/speculator.py",
+        "sha256": "55a01bd8fd8c0ed55df614cd740db098d0d6e4f42f4535235aa09f2d58b8503e",
+        "target": "vllm/v1/worker/gpu/spec_decode/autoregressive/speculator.py"
+      },
+      {
+        "base_sha256": "bf99ca16c09d7f73463e7204bab13e4c71d501cf5da8d53dd6a0227d716535c1",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/worker/gpu/spec_decode/dflash/speculator.py",
+        "path": "v1/worker/gpu/spec_decode/dflash/speculator.py",
+        "sha256": "be7f7e2e49145545a1594cade47e919601b398332a05759abed0f85e36a389b2",
+        "target": "vllm/v1/worker/gpu/spec_decode/dflash/speculator.py"
+      },
+      {
+        "base_sha256": "5fd9d00bb2fc55f0402627b0167a1eff1065d35f0b5b6968cdbdb0f579ebb9b0",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/worker/gpu/spec_decode/speculator.py",
+        "path": "v1/worker/gpu/spec_decode/speculator.py",
+        "sha256": "8672a8e2eec0bd67f4e37d893b3d3ca3d694c74fbb025ea54f7d216737a4853c",
+        "target": "vllm/v1/worker/gpu/spec_decode/speculator.py"
+      },
+      {
+        "base_sha256": "39ebdfdc8de50d7fddc324aa011275dccd38f2dcc32c4e3268dbbf3ea915fe49",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/worker/gpu/spec_decode/utils.py",
+        "path": "v1/worker/gpu/spec_decode/utils.py",
+        "sha256": "b474672b7c3d33cf4c644de72a71313a9bb4d6aaa0e819d0f8b01daac9b14ef4",
+        "target": "vllm/v1/worker/gpu/spec_decode/utils.py"
+      },
+      {
+        "base_sha256": "62a2163fd508ff6198ec329c50832ffbc8c7382a3a0099191da4a4f5fb478079",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/v1/worker/gpu/warmup.py",
+        "path": "v1/worker/gpu/warmup.py",
+        "sha256": "915a9d7df0cbc5ca80cbfeb8af17f1040d43ace15340fd3138ce0376f831fb9f",
+        "target": "vllm/v1/worker/gpu/warmup.py"
+      },
+      {
+        "base_sha256": "5bd0302c4cd4cd2c3b7e8b1d01eb49d546475d06897678f5543ea2e0172aae84",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/bench_utils.py",
+        "path": "vllm_flash_attn/cute/bench_utils.py",
+        "sha256": "a655fbaccd3d23de2cacca6e8a7ae7782aa4ee3200cea94f9c73585f2ffe50cc",
+        "target": "vllm/vllm_flash_attn/cute/bench_utils.py"
+      },
+      {
+        "base_sha256": "ba5e05f40bd3cc788a6a6c32d5d75bf60f1ea04767783115377e434e386c241d",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/benchmark_flash_attention_fp8.py",
+        "path": "vllm_flash_attn/cute/benchmark_flash_attention_fp8.py",
+        "sha256": "440daf774dc2b0f1df1928cf3291af8825724b974180313fcd26757d26229fbe",
+        "target": "vllm/vllm_flash_attn/cute/benchmark_flash_attention_fp8.py"
+      },
+      {
+        "base_sha256": "4228d771518f22d26c9785417dea5a92acab35da807f3151c2b79b81d8ebbb44",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/blackwell_helpers.py",
+        "path": "vllm_flash_attn/cute/blackwell_helpers.py",
+        "sha256": "4bc8cd5ca91fa99d4591fd6fa1e74c8199e8d3ae19ba8d04dac39065a2c12259",
+        "target": "vllm/vllm_flash_attn/cute/blackwell_helpers.py"
+      },
+      {
+        "base_sha256": "c9378317ff1f259c26e3d8a496a0a90daae779af24cf6579aa56090125c654ea",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/block_sparse_utils.py",
+        "path": "vllm_flash_attn/cute/block_sparse_utils.py",
+        "sha256": "eb22f64966b747bfebc2768962ecf12e24fcc785bedb326d69abdb424c9614de",
+        "target": "vllm/vllm_flash_attn/cute/block_sparse_utils.py"
+      },
+      {
+        "base_sha256": "29f616d0cb55fcb38afc4813f829f8b4dc7dbcc047f90adfd182bf61dcce5222",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/block_sparsity.py",
+        "path": "vllm_flash_attn/cute/block_sparsity.py",
+        "sha256": "f33aff9300e7c51cdff41f19396b2f6df6d0126e2f9dab9afd1b54c197c4fd49",
+        "target": "vllm/vllm_flash_attn/cute/block_sparsity.py"
+      },
+      {
+        "base_sha256": "aa508c474fcd03494d7dbbdef5fb2598935ec4447e0d3b5a8f2700c799390188",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/compute_block_sparsity.py",
+        "path": "vllm_flash_attn/cute/compute_block_sparsity.py",
+        "sha256": "338221501026c46633fe07a3fdc38ed489d46ceec49a337edd1ba7299b312fc7",
+        "target": "vllm/vllm_flash_attn/cute/compute_block_sparsity.py"
+      },
+      {
+        "base_sha256": "3e5e6841466f4769a0f055f27eac3ba4af73eaa03f95c89ed93926ecec258892",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/cute_dsl_utils.py",
+        "path": "vllm_flash_attn/cute/cute_dsl_utils.py",
+        "sha256": "e8248aa0edc593bdb2e90397281a91b0547bb333ba3c672c45e3ce42ed46b07a",
+        "target": "vllm/vllm_flash_attn/cute/cute_dsl_utils.py"
+      },
+      {
+        "base_sha256": "b7064ac604749307230b79ad2d1952d26797a57e976fa2f629d8df2a05f33a45",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/flash_bwd.py",
+        "path": "vllm_flash_attn/cute/flash_bwd.py",
+        "sha256": "7d837ae65f36a3402a5c4ec474fec2a81f94f6ccb667639d2c9a4bd48958e1c4",
+        "target": "vllm/vllm_flash_attn/cute/flash_bwd.py"
+      },
+      {
+        "base_sha256": "3c42266ba1c21d693561883a78c85386eb381bc47761087683e3d8290e67f1cf",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/flash_bwd_postprocess.py",
+        "path": "vllm_flash_attn/cute/flash_bwd_postprocess.py",
+        "sha256": "eac9381af7af5279f6045c8f6435a98c3b418c86bbd7d2b76d47cf43d9f84d1b",
+        "target": "vllm/vllm_flash_attn/cute/flash_bwd_postprocess.py"
+      },
+      {
+        "base_sha256": "d4aaa1bf63e06d17039a8e595b1428f4b54f50ea3c9bc6b596e70b01f4904fc8",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/flash_bwd_preprocess.py",
+        "path": "vllm_flash_attn/cute/flash_bwd_preprocess.py",
+        "sha256": "8f60606a3b479f2708ff74cf559db8ce32b2862b4b7f54a0031bb81c1eeec2da",
+        "target": "vllm/vllm_flash_attn/cute/flash_bwd_preprocess.py"
+      },
+      {
+        "base_sha256": "dca70aecc3bccb38bf7b1e8e68465037ab7dc49bb4a1492aec2406017d3b39a7",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/flash_bwd_sm100.py",
+        "path": "vllm_flash_attn/cute/flash_bwd_sm100.py",
+        "sha256": "a2a171e0e689ebdcb9e6b16149dede35bd593a00571f811c006575032e925114",
+        "target": "vllm/vllm_flash_attn/cute/flash_bwd_sm100.py"
+      },
+      {
+        "base_sha256": "f95c82f047bb75e07a8947d190415625a713dd2f4ed5fb34016591b0a631959c",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/flash_bwd_sm90.py",
+        "path": "vllm_flash_attn/cute/flash_bwd_sm90.py",
+        "sha256": "27a555a86ae176d0c06ad26068c8ed4f474bc36701107c7be081075473f3d6aa",
+        "target": "vllm/vllm_flash_attn/cute/flash_bwd_sm90.py"
+      },
+      {
+        "base_sha256": "5d7744dae2025da809f4e5083358dd825233913056e927552c7570c6b4de9d4a",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/flash_fwd.py",
+        "path": "vllm_flash_attn/cute/flash_fwd.py",
+        "sha256": "5e5a264e7dad4510f8e82a55fe4f5c4796a9cf093324ee2e872437e903a14d26",
+        "target": "vllm/vllm_flash_attn/cute/flash_fwd.py"
+      },
+      {
+        "base_sha256": "e44a630e70cfa679e4e96c7b83c6f5ed0c6826e7008117830f80f659b960f795",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/flash_fwd_mla_sm100.py",
+        "path": "vllm_flash_attn/cute/flash_fwd_mla_sm100.py",
+        "sha256": "f92bd275ba55f6baa31f0f284ffd53fdf9e54ab323e9b7fa686d04d94dc5ed5d",
+        "target": "vllm/vllm_flash_attn/cute/flash_fwd_mla_sm100.py"
+      },
+      {
+        "base_sha256": "de30d2eb91584cc7ea0683d63a0e5a18853351ec0ec3c13909c1d4eaca7fe37e",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/flash_fwd_sm100.py",
+        "path": "vllm_flash_attn/cute/flash_fwd_sm100.py",
+        "sha256": "7844228084105f29210f3537091593e4c47edb6e9b4ed20fc90416fb6d0d2f94",
+        "target": "vllm/vllm_flash_attn/cute/flash_fwd_sm100.py"
+      },
+      {
+        "base_sha256": "61f3c4c018b8d9e6a3e12694a0a565ce660cd4ddbe68aed060ba71291abd8493",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/flash_fwd_sm120.py",
+        "path": "vllm_flash_attn/cute/flash_fwd_sm120.py",
+        "sha256": "d7cf5412d8efe20ea0f11f8b4a796e8fde860d992b1c66964f46603e42c7fb49",
+        "target": "vllm/vllm_flash_attn/cute/flash_fwd_sm120.py"
+      },
+      {
+        "base_sha256": "1cf2bce9a5ca094c148e32481b22bd5265345ce3ccdffd7645eaf5ba8baef95a",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/flash_fwd_sm90.py",
+        "path": "vllm_flash_attn/cute/flash_fwd_sm90.py",
+        "sha256": "d38af4cd561c2b7446ab7b9a952f8b94beef3974f79e4fa75c6a88eeb8aa8f89",
+        "target": "vllm/vllm_flash_attn/cute/flash_fwd_sm90.py"
+      },
+      {
+        "base_sha256": "f19757c2e2297b689c1a7d3c426738b87e24e37eaa345aeaec27c6ac67726e95",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/interface.py",
+        "path": "vllm_flash_attn/cute/interface.py",
+        "sha256": "75fd5ab8f0633b57fdb19dbc23d88b3c59d04e333c697189dd70bd59b46f539f",
+        "target": "vllm/vllm_flash_attn/cute/interface.py"
+      },
+      {
+        "base_sha256": "a17ba65e243de981602639f9fe2acdcef488e42cfbeab5f34ca62a3f1e76e202",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/mask.py",
+        "path": "vllm_flash_attn/cute/mask.py",
+        "sha256": "84fef7d20f89c5a4059880c7d722747e6ac140067f8f9d983d55835085822ac5",
+        "target": "vllm/vllm_flash_attn/cute/mask.py"
+      },
+      {
+        "base_sha256": "1f80f96b690a2888ee1301d377665db6e9dd74b402f80eaa867d38f7294d813b",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/named_barrier.py",
+        "path": "vllm_flash_attn/cute/named_barrier.py",
+        "sha256": "e9e2680224af6ba8260e36aae4bb2fdcf589b75bd0d07050df7c4c59e1c716dd",
+        "target": "vllm/vllm_flash_attn/cute/named_barrier.py"
+      },
+      {
+        "base_sha256": "24dfcd04219f2c40128c6ae718c519e514bb23ab17c116c614c477fedd38a181",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/pack_gqa.py",
+        "path": "vllm_flash_attn/cute/pack_gqa.py",
+        "sha256": "5e87a7ff15594a3a8afb2433ab43330bdb90748b846eea2b4cacb8c11271a4e4",
+        "target": "vllm/vllm_flash_attn/cute/pack_gqa.py"
+      },
+      {
+        "base_sha256": "5506eb262ffcd513dbb7fdce654afc55ae9c9028e485d9bbb42310251aa2cc5b",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/paged_kv.py",
+        "path": "vllm_flash_attn/cute/paged_kv.py",
+        "sha256": "88153ebd664bf27d9cd62c67147dc0ff4ca488905fa48b93b702c339d8163b6c",
+        "target": "vllm/vllm_flash_attn/cute/paged_kv.py"
+      },
+      {
+        "base_sha256": "9ad38e0535bccb21b647bf0de532969445c69f9434b13b3c467b606c0c973600",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/sm100_hd256_2cta_fmha_backward.py",
+        "path": "vllm_flash_attn/cute/sm100_hd256_2cta_fmha_backward.py",
+        "sha256": "f61f6170e9962374cb9ac94012596038a73aa1c6eb94d88463e9a998a2bc2f64",
+        "target": "vllm/vllm_flash_attn/cute/sm100_hd256_2cta_fmha_backward.py"
+      },
+      {
+        "base_sha256": "3af4dedea7795f1886ed9b369a823ec287130cad5ef2bac0b6e8cb7c3a9ff4ff",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/sm100_hd256_2cta_fmha_backward_dkdvkernel.py",
+        "path": "vllm_flash_attn/cute/sm100_hd256_2cta_fmha_backward_dkdvkernel.py",
+        "sha256": "a0edcbe136435d42d01659933100d7ad2adc026c2cc80cc9f457b2357f1b747c",
+        "target": "vllm/vllm_flash_attn/cute/sm100_hd256_2cta_fmha_backward_dkdvkernel.py"
+      },
+      {
+        "base_sha256": "74f2be1f79242ddec21617769357d72301fbcb12e3a17837562c64fc3a25eba1",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/sm100_hd256_2cta_fmha_backward_dqkernel.py",
+        "path": "vllm_flash_attn/cute/sm100_hd256_2cta_fmha_backward_dqkernel.py",
+        "sha256": "aca836a6c27792f81384e989037a04f5dfb3a85911a25a248b336036a06b078e",
+        "target": "vllm/vllm_flash_attn/cute/sm100_hd256_2cta_fmha_backward_dqkernel.py"
+      },
+      {
+        "base_sha256": "a1f5f6c767696e2e5336e785ff52bf99e4010c6268010f9aa7bd0ee5b22ac6f8",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/sm100_hd256_2cta_fmha_forward.py",
+        "path": "vllm_flash_attn/cute/sm100_hd256_2cta_fmha_forward.py",
+        "sha256": "be6c00e3de09bb4b100116a8b6980c070f242f8b01cfd8b42b852ab4c048ba07",
+        "target": "vllm/vllm_flash_attn/cute/sm100_hd256_2cta_fmha_forward.py"
+      },
+      {
+        "base_sha256": "c3a72ac00e75ce8bed0db2ec8e7f629b9513e8f1e80800fdeaea3006c477e0fe",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/softmax.py",
+        "path": "vllm_flash_attn/cute/softmax.py",
+        "sha256": "41fae18b27bab59b9769087b70b270e280809189c92ca88e8774d9addbbb7016",
+        "target": "vllm/vllm_flash_attn/cute/softmax.py"
+      },
+      {
+        "base_sha256": "a225f5c8925991547beeb9fdb708ec63650d051a4fb3496ae7b1002c3f01057f",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/testing.py",
+        "path": "vllm_flash_attn/cute/testing.py",
+        "sha256": "2292b589dc04d2a6822c65aab3a588faed8c7a307f54e1348500519ae130796f",
+        "target": "vllm/vllm_flash_attn/cute/testing.py"
+      },
+      {
+        "base_sha256": "f9b98381f84af6bcdb7304b539a43527cc6bd9552c7030cc70f9fd3749f43366",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/tile_scheduler.py",
+        "path": "vllm_flash_attn/cute/tile_scheduler.py",
+        "sha256": "1e1ad40509be76327ee77430ac3a73bb27d5e6f2b0819c57bdcf7d875e6cf38e",
+        "target": "vllm/vllm_flash_attn/cute/tile_scheduler.py"
+      },
+      {
+        "base_sha256": "85d31fc88cdf332054439fcc2e2438d2a387b52d421eb458789f767d3cf64cc6",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/topk_gather_kv.py",
+        "path": "vllm_flash_attn/cute/topk_gather_kv.py",
+        "sha256": "fd6aaf431c145670c2209d00da8b7863f9d083a6d2bff2f57aa97ee74349352d",
+        "target": "vllm/vllm_flash_attn/cute/topk_gather_kv.py"
+      },
+      {
+        "base_sha256": "70d1e3f089f308047d7ca8abb3612bb0815fb4126960611a15be8e86fd7d38d9",
+        "classification": "modified",
+        "donor": {
+          "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+          "license": "BSD-3-Clause",
+          "name": "flash-attention",
+          "repository": "https://github.com/vllm-project/flash-attention.git"
+        },
+        "o14_origin_path": "reproducibility/overlays/vllm/vllm/vllm_flash_attn/cute/utils.py",
+        "path": "vllm_flash_attn/cute/utils.py",
+        "sha256": "0adb633cddf07a50c9a5b89280a2acd344cd4b709357e44ede0055b00d67e3d2",
+        "target": "vllm/vllm_flash_attn/cute/utils.py"
+      }
+    ]
+  }
+}

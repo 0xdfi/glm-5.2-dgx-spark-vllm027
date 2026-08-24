@@ -1,0 +1,22 @@
+{
+  "artifact_id": "lmhead_w8v2_sidecar.safetensors",
+  "artifact_type": "sidecar",
+  "distribution": {
+    "method": "external-required",
+    "source": null
+  },
+  "integrity": {
+    "files": [],
+    "status": "unknown"
+  },
+  "notes": [
+    "The exact W8 lm-head sidecar is not published in this repository.",
+    "Its whole-file SHA-256 and governing rights must be recorded before exact-champion verification."
+  ],
+  "rights": {
+    "evidence": [],
+    "license": null,
+    "status": "unknown"
+  },
+  "schema_version": "1.0.0"
+}

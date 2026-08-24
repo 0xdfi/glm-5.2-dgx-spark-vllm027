@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://0xdfi.example/correctness/teacher_forced_reference.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "subject", "teacher_forced", "free_generation", "temperature_zero"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "subject": {"$ref": "#/$defs/subject"},
+    "teacher_forced": {"type": "array", "items": {"$ref": "#/$defs/teacher"}},
+    "free_generation": {"type": "array", "items": {"$ref": "#/$defs/free"}},
+    "temperature_zero": {"type": "array", "items": {"$ref": "#/$defs/zero"}}
+  },
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["image_digest", "build_lock_id", "model_id", "sidecar_id", "preset_id", "tokenizer_id", "sampling_id"],
+      "properties": {
+        "image_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "build_lock_id": {"$ref": "#/$defs/sha"},
+        "model_id": {"$ref": "#/$defs/sha"},
+        "sidecar_id": {"$ref": "#/$defs/sha"},
+        "preset_id": {"$ref": "#/$defs/sha"},
+        "tokenizer_id": {"$ref": "#/$defs/sha"},
+        "sampling_id": {"$ref": "#/$defs/sha"}
+      }
+    },
+    "teacher": {
+      "type": "object", "additionalProperties": false,
+      "required": ["prompt_id", "position", "prefix", "topk_token_ids", "topk_logprobs"],
+      "properties": {
+        "prompt_id": {"type": "string", "minLength": 1},
+        "position": {"type": "integer", "minimum": 0},
+        "prefix": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0}},
+        "topk_token_ids": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "integer", "minimum": 0}},
+        "topk_logprobs": {"type": "array", "minItems": 2, "items": {"type": "number", "maximum": 0}}
+      }
+    },
+    "free": {
+      "type": "object", "additionalProperties": false,
+      "required": ["prompt_id", "seed", "token_ids", "text", "semantic_valid", "schema_valid"],
+      "properties": {
+        "prompt_id": {"type": "string", "minLength": 1},
+        "seed": {"type": "integer"},
+        "token_ids": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+        "text": {"type": "string"},
+        "semantic_valid": {"type": "boolean"},
+        "schema_valid": {"type": "boolean"}
+      }
+    },
+    "zero": {
+      "type": "object", "additionalProperties": false,
+      "required": ["prompt_id", "run", "output_sha256"],
+      "properties": {
+        "prompt_id": {"type": "string", "minLength": 1},
+        "run": {"type": "integer", "minimum": 1, "maximum": 10},
+        "output_sha256": {"$ref": "#/$defs/sha"}
+      }
+    }
+  }
+}

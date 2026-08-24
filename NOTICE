@@ -1,0 +1,23 @@
+GLM-5.2 Champion Runtime Publication
+Copyright 2026 dfi / 0xdfi
+
+Original Build A runtime integration and champion publication work:
+dfi / 0xdfi.
+
+This distribution includes modified source from the vLLM project and B12X,
+each identified by immutable commit in runtime/manifests/upstream-lock.json.
+Their contributors retain their applicable copyrights and licenses.
+
+The distributed vLLM runtime overlay includes BSD-3-Clause source derived from
+vllm-project/flash-attention:
+Copyright (c) 2022, the respective contributors, as shown by its AUTHORS file.
+
+It includes MIT source derived from vllm-project/MSA:
+Copyright (c) 2026 MiniMax.
+
+It includes MIT source derived from vllm-project/FlashMLA:
+Copyright (c) 2025 DeepSeek.
+
+The source-build recipe also retrieves NVIDIA CUTLASS and other immutable
+public build inputs. Those inputs are not relicensed by this repository; their
+repositories, commits, trees, and declared licenses are recorded in the lock.

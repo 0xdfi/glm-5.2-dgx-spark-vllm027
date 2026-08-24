@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://0xdfi.example/schemas/provenance.schema.json",
+  "title": "Champion source provenance ledger",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "records"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "records": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/record"}
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "gitSha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "classification",
+        "copyright",
+        "license",
+        "origin_repository",
+        "origin_commit",
+        "origin_path",
+        "base_sha256",
+        "target_sha256",
+        "modified_by",
+        "evidence"
+      ],
+      "properties": {
+        "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"},
+        "classification": {
+          "enum": [
+            "project-apache",
+            "existing-mit",
+            "contributed-mit",
+            "upstream-unmodified",
+            "upstream-derivative",
+            "generated-evidence",
+            "license-text-apache",
+            "license-text-mit",
+            "license-text-bsd-3-clause"
+          ]
+        },
+        "copyright": {"type": "string", "minLength": 1},
+        "license": {"type": "string", "minLength": 1},
+        "origin_repository": {"type": ["string", "null"], "minLength": 1},
+        "origin_commit": {
+          "anyOf": [{"$ref": "#/$defs/gitSha"}, {"type": "null"}]
+        },
+        "origin_path": {"type": ["string", "null"], "minLength": 1},
+        "base_sha256": {
+          "anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]
+        },
+        "target_sha256": {"$ref": "#/$defs/sha256"},
+        "modified_by": {"type": ["string", "null"], "minLength": 1},
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256"],
+            "properties": {
+              "path": {"type": "string", "minLength": 1},
+              "sha256": {"$ref": "#/$defs/sha256"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

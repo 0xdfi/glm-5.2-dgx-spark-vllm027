@@ -1,0 +1,1286 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e95fe38d329917826ca7f1c070f91cb4bf01c42c..9c2c5916de30479a6d3c6341b56cd9b24411ede7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -197,6 +197,9 @@ if(VLLM_GPU_LANG STREQUAL "CUDA")
+   #
+   clear_cuda_arches(CUDA_ARCH_FLAGS)
+   extract_unique_cuda_archs_ascending(CUDA_ARCHS "${CUDA_ARCH_FLAGS}")
++  # Preserve the exact requested target before the general component policy
++  # lowers SM12x to its CUDA 13 family target.
++  set(CUDA_REQUESTED_ARCHS "${CUDA_ARCHS}")
+   message(STATUS "CUDA target architectures: ${CUDA_ARCHS}")
+   # Filter the target architectures by the supported supported archs
+   # since for some files we will build for all CUDA_ARCHS.
+@@ -494,8 +497,20 @@ if(VLLM_GPU_LANG STREQUAL "CUDA" OR VLLM_GPU_LANG STREQUAL "HIP")
+       endif()
+     endif()
+ 
++    set(VLLM_STABLE_DEFAULT_GENCODE_SRCS "${VLLM_STABLE_EXT_SRC}")
++    if("12.1a" IN_LIST CUDA_REQUESTED_ARCHS)
++      # The compact MLA writer requires native GB10 code. Keep this TU out of
++      # the generic 12.0 target so nvcc never receives both sm_120 and sm_120f,
++      # while all other Zatz/B12X components retain their 12.0f family policy.
++      list(REMOVE_ITEM VLLM_STABLE_DEFAULT_GENCODE_SRCS
++        "csrc/libtorch_stable/cache_kernels.cu")
++      set_gencode_flags_for_srcs(
++        SRCS "csrc/libtorch_stable/cache_kernels.cu"
++        CUDA_ARCHS "12.1a")
++    endif()
++
+     set_gencode_flags_for_srcs(
+-      SRCS "${VLLM_STABLE_EXT_SRC}"
++      SRCS "${VLLM_STABLE_DEFAULT_GENCODE_SRCS}"
+       CUDA_ARCHS "${CUDA_ARCHS}")
+ 
+     # Only build Marlin kernels if we are building for at least some compatible archs.
+diff --git a/csrc/libtorch_stable/cache_kernels.cu b/csrc/libtorch_stable/cache_kernels.cu
+index eac93ac9a9f05f42d09a31c1c3bd6195eec2ae78..ef89d6f367e494d076742c5dc29ed26a1c750042 100644
+--- a/csrc/libtorch_stable/cache_kernels.cu
++++ b/csrc/libtorch_stable/cache_kernels.cu
+@@ -7,6 +7,11 @@
+ #include "quantization/vectorization_utils.cuh"
+ #include "concat_mla_q.cuh"
+ 
++#if defined(ENABLE_NVFP4_SM100) || defined(ENABLE_NVFP4_SM120)
++  #define NVFP4_ENABLE_ELTS16 1
++  #include "quantization/fp4/nvfp4_utils.cuh"
++#endif
++
+ #ifdef USE_ROCM
+   #include "../quantization/w8a8/fp8/amd/quant_utils.cuh"
+ #else
+@@ -16,6 +21,7 @@
+ #include <algorithm>
+ #include <cassert>
+ #include <cfloat>
++#include <type_traits>
+ 
+ #ifdef USE_ROCM
+   #include <hip/hip_bf16.h>
+@@ -541,6 +547,144 @@ __global__ void concat_and_cache_ds_mla_kernel(
+       *reinterpret_cast<const uint64_t*>(result);
+ }
+ 
++#if defined(ENABLE_NVFP4_SM100) || defined(ENABLE_NVFP4_SM120)
++template <typename scalar_t>
++__global__ void concat_and_cache_nvfp4_mla_kernel(
++    const scalar_t* __restrict__ kv_c,  // [num_tokens, kv_lora_rank]
++    const scalar_t* __restrict__ k_pe,  // [num_tokens, pe_dim], post-RoPE
++    uint8_t* __restrict__ kv_cache,     // [num_blocks, block_size, 368]
++    const int64_t* __restrict__ slot_mapping,  // [num_tokens]
++    const int block_stride,                    // bytes between pages
++    const int entry_stride,                    // bytes between token records
++    const int kv_c_stride,
++    const int k_pe_stride,
++    const int kv_lora_rank,
++    const int pe_dim,
++    const int block_size,
++    const float* __restrict__ outer_scale) {
++  using CudaType = typename CUDATypeConverter<scalar_t>::Type;
++  using PVec = PackedVec<CudaType, CVT_FP4_PACK16>;
++
++  static constexpr int kNopeBytes = 256;
++  static constexpr int kScaleBytes = 32;
++  static constexpr int kRopeScaleOffset = kNopeBytes + kScaleBytes;
++  static constexpr int kRopeScaleBytes = 4;
++  static constexpr int kRopePadBytes = 12;
++  static constexpr int kRopeOffset = 304;
++  static constexpr int kRopeBytes = 64;
++  static constexpr int kRecordBytes = 368;
++  static constexpr int kFp4GroupSize = CVT_FP4_SF_VEC_SIZE;
++  static constexpr int kEltsPerThread = CVT_FP4_ELTS_PER_THREAD;
++  static constexpr int kThreadsPerScale = kFp4GroupSize / kEltsPerThread;
++  static_assert(kRopeScaleOffset == 288);
++  static_assert(kRopeScaleOffset + kRopeScaleBytes + kRopePadBytes ==
++                kRopeOffset);
++  static_assert(kRopeOffset + kRopeBytes == kRecordBytes);
++
++  // Validate on device to avoid a host synchronization. Every thread returns
++  // before deriving a cache address or writing the record when the shared
++  // per-layer outer scale is invalid.
++  const float latent_outer_scale = *outer_scale;
++  if (!isfinite(latent_outer_scale) || latent_outer_scale <= 0.0f) {
++    return;
++  }
++
++  const int64_t token_idx = blockIdx.x;
++  const int64_t slot_idx = slot_mapping[token_idx];
++  if (slot_idx < 0) {
++    return;
++  }
++
++  const int64_t block_idx = slot_idx / block_size;
++  const int64_t block_offset = slot_idx % block_size;
++  uint8_t* __restrict__ token_dst =
++      kv_cache + block_idx * block_stride + block_offset * entry_stride;
++  const CudaType* __restrict__ token_src =
++      reinterpret_cast<const CudaType*>(kv_c) + token_idx * kv_c_stride;
++  // B12X reconstructs latent = E2M1 * inline_E4M3 * outer_scale. Passing
++  // 1/outer_scale into the PR82 quantizer stores inline=(amax/6)/outer while
++  // preserving the packed E2M1 values. The separate RoPE tail is intentionally
++  // not outer-scaled.
++  const float latent_global_scale = 1.0f / latent_outer_scale;
++
++  // The first 288 bytes are the source-complete PR82 latent ABI: 32 groups of
++  // 16 BF16 values, eight packed E2M1 bytes and one raw E4M3 amax/6 scale per
++  // group. No Sapid 2^-6 global factor is used.
++  const int group_count = kv_lora_rank / kFp4GroupSize;
++  const int thread_group_count = blockDim.x / kThreadsPerScale;
++  const int thread_group = threadIdx.x / kThreadsPerScale;
++  const int thread_group_lane = threadIdx.x % kThreadsPerScale;
++  for (int group = thread_group; group < group_count;
++       group += thread_group_count) {
++    PVec in_vec;
++    const CudaType* __restrict__ src =
++        token_src + group * kFp4GroupSize + thread_group_lane * kEltsPerThread;
++#pragma unroll
++    for (int i = 0; i < kEltsPerThread / 2; ++i) {
++      in_vec.elts[i] =
++          reinterpret_cast<const typename PackedTypeConverter<CudaType>::Type*>(
++              src)[i];
++    }
++
++    uint8_t scale_byte;
++    uint8_t* scale_out = (thread_group_lane == 0) ? &scale_byte : nullptr;
++    fp4_packed_t packed = cvt_warp_fp16_to_fp4<CudaType, kThreadsPerScale>(
++        in_vec, latent_global_scale, scale_out);
++#if CVT_FP4_PACK16
++    uint8_t* data_dst = token_dst + group * 8;
++    reinterpret_cast<uint64_t*>(data_dst)[0] =
++        (uint64_t(packed.hi) << 32) | uint64_t(packed.lo);
++#else
++    uint8_t* data_dst = token_dst + group * 8 + thread_group_lane * 4;
++    reinterpret_cast<uint32_t*>(data_dst)[0] = packed;
++#endif
++    if (scale_out != nullptr) {
++      token_dst[kNopeBytes + group] = scale_byte;
++    }
++  }
++
++  // The public B12X 368-byte reader ABI stores one FP32 scale for the 64
++  // post-RoPE values, then 12 bytes of zero padding and 64 E4M3 bytes.
++  const CudaType* __restrict__ rope_src =
++      reinterpret_cast<const CudaType*>(k_pe) + token_idx * k_pe_stride;
++  float local_rope_amax = 0.0f;
++  for (int i = threadIdx.x; i < pe_dim; i += blockDim.x) {
++    local_rope_amax = fmaxf(local_rope_amax, fabsf(float(rope_src[i])));
++  }
++  const unsigned full_mask = 0xffffffffu;
++  for (int offset = 16; offset > 0; offset >>= 1) {
++    local_rope_amax = fmaxf(
++        local_rope_amax,
++        __shfl_down_sync(full_mask, local_rope_amax, offset));
++  }
++  __shared__ float warp_amax[4];
++  __shared__ float rope_scale;
++  if ((threadIdx.x & 31) == 0) {
++    warp_amax[threadIdx.x >> 5] = local_rope_amax;
++  }
++  __syncthreads();
++  if (threadIdx.x == 0) {
++    float rope_amax = 0.0f;
++#pragma unroll
++    for (int warp = 0; warp < 4; ++warp) {
++      rope_amax = fmaxf(rope_amax, warp_amax[warp]);
++    }
++    rope_scale = fmaxf(rope_amax / kFp8ScaleDivisor, FLT_MIN);
++    *reinterpret_cast<float*>(token_dst + kRopeScaleOffset) = rope_scale;
++  }
++  for (int i = threadIdx.x; i < kRopePadBytes; i += blockDim.x) {
++    token_dst[kRopeScaleOffset + kRopeScaleBytes + i] = 0;
++  }
++  __syncthreads();
++  for (int i = threadIdx.x; i < pe_dim; i += blockDim.x) {
++    token_dst[kRopeOffset + i] =
++        fp8::scaled_convert<uint8_t, float,
++                            Fp8KVCacheDataType::kFp8E4M3>(float(rope_src[i]),
++                                                          rope_scale);
++  }
++}
++#endif
++
+ template <typename scalar_t, typename cache_t, Fp8KVCacheDataType kv_dt>
+ __global__ void indexer_k_quant_and_cache_kernel(
+     const scalar_t* __restrict__ k,  // [num_tokens, head_dim]
+@@ -570,9 +714,12 @@ __global__ void indexer_k_quant_and_cache_kernel(
+   float2 k_val = (reinterpret_cast<const float2*>(
+       k))[(token_idx * head_dim + head_dim_idx) / VEC_SIZE];
+   scalar_t* k_val_ptr = reinterpret_cast<scalar_t*>(&k_val);
++  using AmaxType =
++      std::conditional_t<std::is_same_v<scalar_t, uint16_t>, half, scalar_t>;
++  const AmaxType* amax_ptr = reinterpret_cast<const AmaxType*>(k_val_ptr);
+   float amax = 0.0f;
+   for (int i = 0; i < VEC_SIZE; i++) {
+-    amax = fmaxf(amax, fabsf(float(k_val_ptr[i])));
++    amax = fmaxf(amax, fabsf(float(amax_ptr[i])));
+   }
+ 
+   // Reduced amax
+@@ -835,6 +982,11 @@ void reshape_and_cache_flash(
+           kv_c_stride, k_pe_stride, kv_lora_rank, pe_dim, block_size,         \
+           reinterpret_cast<const float*>(scale.data_ptr()));
+ 
++void concat_and_cache_nvfp4_mla(
++    torch::stable::Tensor& kv_c, torch::stable::Tensor& k_pe,
++    torch::stable::Tensor& kv_cache, torch::stable::Tensor& slot_mapping,
++    torch::stable::Tensor& scale);
++
+ void concat_and_cache_mla(
+     torch::stable::Tensor& kv_c,      // [num_tokens, kv_lora_rank]
+     torch::stable::Tensor& k_pe,      // [num_tokens, pe_dim]
+@@ -842,6 +994,11 @@ void concat_and_cache_mla(
+                                       // + pe_dim)]
+     torch::stable::Tensor& slot_mapping,  // [num_tokens] or [num_actual_tokens]
+     const std::string& kv_cache_dtype, torch::stable::Tensor& scale) {
++  if (kv_cache_dtype == "nvfp4_ds_mla") {
++    concat_and_cache_nvfp4_mla(kv_c, k_pe, kv_cache, slot_mapping, scale);
++    return;
++  }
++
+   // NOTE(woosuk): In vLLM V1, key.size(0) can be different from
+   // slot_mapping.size(0) because of padding for CUDA graphs.
+   // In vLLM V0, key.size(0) is always equal to slot_mapping.size(0) because
+@@ -898,6 +1055,79 @@ void concat_and_cache_mla(
+   }
+ }
+ 
++void concat_and_cache_nvfp4_mla(
++    torch::stable::Tensor& kv_c,      // [num_tokens, kv_lora_rank]
++    torch::stable::Tensor& k_pe,      // [num_tokens, pe_dim]
++    torch::stable::Tensor& kv_cache,  // [num_blocks, block_size, 368]
++    torch::stable::Tensor& slot_mapping,  // [num_tokens] or [num_actual_tokens]
++    torch::stable::Tensor& scale) {
++  int num_tokens = slot_mapping.size(0);
++  int kv_lora_rank = kv_c.size(1);
++  int pe_dim = k_pe.size(1);
++
++  using torch::headeronly::ScalarType;
++  STD_TORCH_CHECK(kv_c.dim() == 2 && k_pe.dim() == 2,
++                  "kv_c and k_pe must be rank-2 for nvfp4_ds_mla");
++  STD_TORCH_CHECK(kv_cache.dim() == 3,
++                  "kv_cache must be rank-3 for nvfp4_ds_mla");
++  STD_TORCH_CHECK(slot_mapping.dim() == 1 &&
++                      slot_mapping.scalar_type() == ScalarType::Long,
++                  "slot_mapping must be rank-1 int64 for nvfp4_ds_mla");
++  STD_TORCH_CHECK(num_tokens <= kv_c.size(0) && num_tokens <= k_pe.size(0),
++                  "slot_mapping rows must not exceed kv_c or k_pe rows");
++  STD_TORCH_CHECK(kv_lora_rank == 512,
++                  "kv_lora_rank must be 512 for nvfp4_ds_mla");
++  STD_TORCH_CHECK(pe_dim == 64, "pe_dim must be 64 for nvfp4_ds_mla");
++  STD_TORCH_CHECK(kv_cache.element_size() == 1,
++                  "kv_cache must be uint8 for nvfp4_ds_mla");
++  STD_TORCH_CHECK(kv_cache.size(2) == 368,
++                  "kv_cache.size(2) must be 368 bytes for nvfp4_ds_mla");
++  STD_TORCH_CHECK(kv_c.element_size() == 2,
++                  "kv_c.element_size() must be 2 for nvfp4_ds_mla");
++  STD_TORCH_CHECK(k_pe.element_size() == 2,
++                  "k_pe.element_size() must be 2 for nvfp4_ds_mla");
++  STD_TORCH_CHECK(scale.device().is_cuda() && scale.numel() == 1 &&
++                      scale.scalar_type() == ScalarType::Float,
++                  "scale must be a scalar float32 CUDA tensor for nvfp4_ds_mla");
++  STD_TORCH_CHECK(kv_c.device() == k_pe.device() &&
++                      kv_c.device() == kv_cache.device() &&
++                      kv_c.device() == slot_mapping.device() &&
++                      kv_c.device() == scale.device(),
++                  "all nvfp4_ds_mla writer tensors must be on one CUDA device");
++
++#if defined(ENABLE_NVFP4_SM100) || defined(ENABLE_NVFP4_SM120)
++  int block_size = kv_cache.size(1);
++  int kv_c_stride = kv_c.stride(0);
++  int k_pe_stride = k_pe.stride(0);
++  int block_stride = kv_cache.stride(0);
++  int entry_stride = kv_cache.stride(1);
++
++  const torch::stable::accelerator::DeviceGuard device_guard(
++      kv_c.get_device_index());
++  const cudaStream_t stream = get_current_cuda_stream();
++
++  dim3 grid(num_tokens);
++  dim3 block(128);
++  VLLM_STABLE_DISPATCH_HALF_TYPES(
++      kv_c.scalar_type(), "concat_and_cache_nvfp4_mla", [&] {
++        vllm::concat_and_cache_nvfp4_mla_kernel<scalar_t>
++            <<<grid, block, 0, stream>>>(
++                reinterpret_cast<scalar_t*>(kv_c.data_ptr()),
++                reinterpret_cast<scalar_t*>(k_pe.data_ptr()),
++                reinterpret_cast<uint8_t*>(kv_cache.data_ptr()),
++                slot_mapping.const_data_ptr<int64_t>(), block_stride,
++                entry_stride, kv_c_stride, k_pe_stride, kv_lora_rank, pe_dim,
++                block_size, scale.const_data_ptr<float>());
++      });
++#else
++  (void)num_tokens;
++  STD_TORCH_CHECK(
++      false,
++      "nvfp4_ds_mla KV cache requires SM100+ (Blackwell). "
++      "Please rebuild vllm with a Blackwell-compatible CUDA target.");
++#endif
++}
++
+ namespace vllm {
+ 
+ template <typename Tout, typename Tin, Fp8KVCacheDataType kv_dt>
+diff --git a/csrc/libtorch_stable/ops.h b/csrc/libtorch_stable/ops.h
+index 1cc8e8167a622b0e9a6fdd93e409345415402494..f0981c1df7eeed16aea3b34104a59b8ba3e42586 100644
+--- a/csrc/libtorch_stable/ops.h
++++ b/csrc/libtorch_stable/ops.h
+@@ -507,6 +507,12 @@ void concat_and_cache_mla(torch::stable::Tensor& kv_c,
+                           const std::string& kv_cache_dtype,
+                           torch::stable::Tensor& scale);
+ 
++void concat_and_cache_nvfp4_mla(torch::stable::Tensor& kv_c,
++                                torch::stable::Tensor& k_pe,
++                                torch::stable::Tensor& kv_cache,
++                                torch::stable::Tensor& slot_mapping,
++                                torch::stable::Tensor& scale);
++
+ // NOTE: k_pe and kv_c order is flipped compared to concat_and_cache_mla
+ void concat_and_cache_mla_rope_fused(
+     torch::stable::Tensor& positions, torch::stable::Tensor& q_pe,
+diff --git a/csrc/libtorch_stable/torch_bindings.cpp b/csrc/libtorch_stable/torch_bindings.cpp
+index d55c12d382a9ef2ae7abc15dfb539c1024a3874b..017f04c0956efa7b37b4ccee019298138f953907 100644
+--- a/csrc/libtorch_stable/torch_bindings.cpp
++++ b/csrc/libtorch_stable/torch_bindings.cpp
+@@ -826,6 +826,12 @@ STABLE_TORCH_LIBRARY_FRAGMENT(_C_cache_ops, ops) {
+       "                     str kv_cache_dtype,"
+       "                     Tensor scale) -> ()");
+ 
++  ops.def(
++      "concat_and_cache_nvfp4_mla(Tensor kv_c, Tensor k_pe,"
++      "                           Tensor! kv_cache,"
++      "                           Tensor slot_mapping,"
++      "                           Tensor scale) -> ()");
++
+   // Rotate Q and K, then write to kv cache for MLA
+   ops.def(
+       "concat_and_cache_mla_rope_fused("
+@@ -924,6 +930,8 @@ STABLE_TORCH_LIBRARY_IMPL(_C_cache_ops, CUDA, ops) {
+   ops.impl("reshape_and_cache", TORCH_BOX(&reshape_and_cache));
+   ops.impl("reshape_and_cache_flash", TORCH_BOX(&reshape_and_cache_flash));
+   ops.impl("concat_and_cache_mla", TORCH_BOX(&concat_and_cache_mla));
++  ops.impl("concat_and_cache_nvfp4_mla",
++           TORCH_BOX(&concat_and_cache_nvfp4_mla));
+   ops.impl("concat_and_cache_mla_rope_fused",
+            TORCH_BOX(&concat_and_cache_mla_rope_fused));
+   ops.impl("convert_fp8", TORCH_BOX(&convert_fp8));
+diff --git a/tests/model_executor/test_mtp_quantization.py b/tests/model_executor/test_mtp_quantization.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f38c4c01d166a5898c78de3fe7e4d9bb306cbae
+--- /dev/null
++++ b/tests/model_executor/test_mtp_quantization.py
+@@ -0,0 +1,127 @@
++# SPDX-License-Identifier: Apache-2.0
++# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++"""Regression tests for DeepSeek/GLM MTP draft quant-config registration.
++
++The MTP draft layer builds its own ``DeepseekV2DecoderLayer`` using a
++*separate* draft quantization config (see ``get_draft_quant_config``), not the
++target model's config. For ``q_lora_rank`` models the MLA down-projection is a
++fused ``fused_qkv_a_proj`` runtime module. ModelOpt FP4/mixed configs can only
++recognize that fused runtime name as quantized by unfusing it through
++``packed_modules_mapping``. If the draft config never registers
++``fused_qkv_a_proj -> [q_a_proj, kv_a_proj_with_mqa]``, the module is built
++unquantized (plain ``weight``) and loading the checkpoint's packed
++``kv_a_proj_with_mqa.weight_packed`` shard fails with a ``KeyError``.
++
++These tests pin the registration contract on the real ``ModelOptNvFp4Config``
++per-instance mapping without needing a GPU or a checkpoint.
++"""
++
++from types import SimpleNamespace
++from unittest.mock import MagicMock, patch
++
++import pytest
++
++_MTP_MODULE = "vllm.model_executor.models.deepseek_mtp"
++
++
++def _make_hf_config(q_lora_rank):
++    return SimpleNamespace(
++        hidden_size=16,
++        rms_norm_eps=1e-5,
++        vocab_size=32,
++        index_topk=0,
++        q_lora_rank=q_lora_rank,
++    )
++
++
++def _build_mtp_layer(quant_config, q_lora_rank):
++    """Construct a DeepSeekMultiTokenPredictorLayer with heavy deps mocked.
++
++    Only the draft quant-config registration path is exercised; RMSNorm,
++    SharedHead and the decoder block are stubbed so no GPU/dist init is needed.
++    Returns the constructed layer.
++    """
++    from vllm.model_executor.models.deepseek_mtp import (
++        DeepSeekMultiTokenPredictorLayer,
++    )
++
++    hf_config = _make_hf_config(q_lora_rank)
++    vllm_config = MagicMock()
++    vllm_config.speculative_config.draft_model_config.hf_config = hf_config
++
++    with (
++        patch(f"{_MTP_MODULE}.RMSNorm"),
++        patch(f"{_MTP_MODULE}.SharedHead"),
++        patch(f"{_MTP_MODULE}.DeepseekV2DecoderLayer"),
++        patch(
++            f"{_MTP_MODULE}.get_draft_quant_config",
++            return_value=quant_config,
++        ),
++        patch(
++            f"{_MTP_MODULE}._maybe_disable_unserialized_modelopt_fp4_nextn",
++            side_effect=lambda config, vllm_cfg, qc: qc,
++        ),
++    ):
++        return DeepSeekMultiTokenPredictorLayer(vllm_config, "model.layers.61")
++
++
++def _fresh_nvfp4_config():
++    from vllm.model_executor.layers.quantization.modelopt import (
++        ModelOptNvFp4Config,
++    )
++
++    return ModelOptNvFp4Config(is_checkpoint_nvfp4_serialized=False)
++
++
++def test_mtp_registers_fused_qkv_a_proj_for_q_lora():
++    quant_config = _fresh_nvfp4_config()
++    _build_mtp_layer(quant_config, q_lora_rank=8)
++
++    mapping = quant_config.packed_modules_mapping
++    assert mapping["fused_qkv_a_proj"] == ["q_a_proj", "kv_a_proj_with_mqa"]
++    assert mapping["gate_up_proj"] == ["gate_proj", "up_proj"]
++
++
++def test_mtp_omits_fused_qkv_a_proj_without_q_lora():
++    quant_config = _fresh_nvfp4_config()
++    _build_mtp_layer(quant_config, q_lora_rank=None)
++
++    mapping = quant_config.packed_modules_mapping
++    # gate_up_proj still needed for the MoE/MLP fused columns...
++    assert mapping["gate_up_proj"] == ["gate_proj", "up_proj"]
++    # ...but there is no fused QKV-A module when q_lora_rank is unset.
++    assert "fused_qkv_a_proj" not in mapping
++
++
++def test_mtp_registration_is_per_instance_not_global():
++    quant_config = _fresh_nvfp4_config()
++    _build_mtp_layer(quant_config, q_lora_rank=8)
++
++    # A separately constructed config must not inherit the mutation: the
++    # mapping is a per-instance dict, so registering on the draft config must
++    # never leak into the target model's config.
++    other = _fresh_nvfp4_config()
++    assert other.packed_modules_mapping == {}
++
++
++def test_mtp_registration_does_not_clobber_existing_mapping():
++    quant_config = _fresh_nvfp4_config()
++    quant_config.packed_modules_mapping["fused_qkv_a_proj"] = ["custom_a", "custom_b"]
++    _build_mtp_layer(quant_config, q_lora_rank=8)
++
++    # setdefault must preserve a pre-existing entry.
++    assert quant_config.packed_modules_mapping["fused_qkv_a_proj"] == [
++        "custom_a",
++        "custom_b",
++    ]
++
++
++def test_mtp_unquantized_draft_skips_registration():
++    # BF16 draft: get_draft_quant_config returns None -> no attribute access,
++    # no crash.
++    layer = _build_mtp_layer(None, q_lora_rank=8)
++    assert layer is not None
++
++
++if __name__ == "__main__":
++    pytest.main([__file__, "-v"])
+diff --git a/tests/v1/attention/pr82_b12x_368_reference.py b/tests/v1/attention/pr82_b12x_368_reference.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..b0b3541a1000e235a4e6088bf5ddee76289dfba0
+--- /dev/null
++++ b/tests/v1/attention/pr82_b12x_368_reference.py
+@@ -0,0 +1,180 @@
++# SPDX-License-Identifier: Apache-2.0
++"""CPU oracle for the 368-byte PR82/B12X GLM sparse-MLA record.
++
++This test-only module is independent of CUDA and runtime imports. The first
++288 bytes follow the Apache-2.0 PR82 latent convention. The compact RoPE tail
++implements the public B12X reader ABI using the public vLLM FP8 scale policy.
++"""
++
++from __future__ import annotations
++
++import math
++import struct
++from collections.abc import Sequence
++
++LATENT_ELEMENTS = 512
++ROPE_ELEMENTS = 64
++GROUP_ELEMENTS = 16
++PACKED_LATENT_BYTES = 256
++LATENT_SCALE_BYTES = 32
++ROPE_SCALE_OFFSET = 288
++ROPE_PAYLOAD_OFFSET = 304
++RECORD_BYTES = 368
++E2M1_MAX = 6.0
++E4M3FN_MAX = 448.0
++FLT_MIN = 1.1754943508222875e-38
++
++_E2M1_MAGNITUDES = (0.0, 0.5, 1.0, 1.5, 2.0, 3.0, 4.0, 6.0)
++
++
++def _f32(value: float) -> float:
++    return struct.unpack("<f", struct.pack("<f", value))[0]
++
++
++def _e4m3fn_decode_positive(code: int) -> float:
++    if not 0 <= code <= 0x7E:
++        raise ValueError(f"not a positive finite E4M3FN code: {code:#04x}")
++    exponent = (code >> 3) & 0x0F
++    mantissa = code & 0x07
++    if exponent == 0:
++        return mantissa * (2.0**-9)
++    return (1.0 + mantissa / 8.0) * (2.0 ** (exponent - 7))
++
++
++_E4M3FN_POSITIVE = tuple(_e4m3fn_decode_positive(code) for code in range(0x7F))
++
++
++def _e4m3fn_encode_positive(value: float) -> int:
++    if not math.isfinite(value) or value < 0.0:
++        raise ValueError("E4M3FN input must be finite and non-negative")
++    value = min(_f32(value), E4M3FN_MAX)
++    return min(
++        range(0x7F),
++        key=lambda code: (
++            abs(_E4M3FN_POSITIVE[code] - value),
++            code & 1,
++            code,
++        ),
++    )
++
++
++def _e4m3fn_encode(value: float) -> int:
++    if not math.isfinite(value):
++        raise ValueError("E4M3FN input must be finite")
++    sign = 0x80 if math.copysign(1.0, value) < 0.0 else 0
++    return sign | _e4m3fn_encode_positive(abs(value))
++
++
++def _e4m3fn_decode(code: int) -> float:
++    magnitude = _e4m3fn_decode_positive(code & 0x7F)
++    return -magnitude if code & 0x80 else magnitude
++
++
++def _e2m1_encode(value: float) -> int:
++    if not math.isfinite(value):
++        raise ValueError("E2M1 input must be finite")
++    magnitude = min(abs(_f32(value)), E2M1_MAX)
++    code = min(
++        range(len(_E2M1_MAGNITUDES)),
++        key=lambda item: (
++            abs(_E2M1_MAGNITUDES[item] - magnitude),
++            item & 1,
++            item,
++        ),
++    )
++    sign = 0x08 if math.copysign(1.0, value) < 0.0 else 0
++    return sign | code
++
++
++def _e2m1_decode(code: int) -> float:
++    magnitude = _E2M1_MAGNITUDES[code & 0x07]
++    return -magnitude if code & 0x08 else magnitude
++
++
++def _finite_f32(values: Sequence[float], expected: int, name: str) -> list[float]:
++    if len(values) != expected:
++        raise ValueError(f"expected {expected} {name} values, got {len(values)}")
++    result = [_f32(float(value)) for value in values]
++    if not all(math.isfinite(value) for value in result):
++        raise ValueError(f"{name} values must be finite")
++    return result
++
++
++def encode_record(
++    latent: Sequence[float], rope: Sequence[float], outer_scale: float = 1.0
++) -> bytes:
++    """Encode the source-grounded 368-byte record with RN-even semantics."""
++    latent_f32 = _finite_f32(latent, LATENT_ELEMENTS, "latent")
++    rope_f32 = _finite_f32(rope, ROPE_ELEMENTS, "RoPE")
++    outer_scale = _f32(float(outer_scale))
++    if not math.isfinite(outer_scale) or outer_scale <= 0.0:
++        raise ValueError("outer_scale must be finite and positive")
++    latent_f32 = [_f32(value / outer_scale) for value in latent_f32]
++    record = bytearray(RECORD_BYTES)
++
++    for group in range(LATENT_SCALE_BYTES):
++        start = group * GROUP_ELEMENTS
++        values = latent_f32[start : start + GROUP_ELEMENTS]
++        amax = max(abs(value) for value in values)
++        scale_code = _e4m3fn_encode_positive(_f32(amax / E2M1_MAX))
++        scale = _E4M3FN_POSITIVE[scale_code]
++        inverse = _f32(1.0 / scale) if scale > 0.0 else 0.0
++        record[PACKED_LATENT_BYTES + group] = scale_code
++        for pair in range(GROUP_ELEMENTS // 2):
++            even = _e2m1_encode(_f32(values[2 * pair] * inverse))
++            odd = _e2m1_encode(_f32(values[2 * pair + 1] * inverse))
++            record[start // 2 + pair] = even | (odd << 4)
++
++    rope_amax = max(abs(value) for value in rope_f32)
++    rope_scale = _f32(max(_f32(rope_amax / E4M3FN_MAX), FLT_MIN))
++    struct.pack_into("<f", record, ROPE_SCALE_OFFSET, rope_scale)
++    # bytearray initialization plus this assignment make pad overwrite explicit.
++    record[ROPE_SCALE_OFFSET + 4 : ROPE_PAYLOAD_OFFSET] = bytes(12)
++    for index, value in enumerate(rope_f32):
++        record[ROPE_PAYLOAD_OFFSET + index] = _e4m3fn_encode(_f32(value / rope_scale))
++
++    assert len(record) == RECORD_BYTES
++    return bytes(record)
++
++
++def decode_record(
++    record: bytes, outer_scale: float = 1.0
++) -> tuple[tuple[float, ...], tuple[float, ...]]:
++    """Decode according to the public B12X reader arithmetic."""
++    if len(record) != RECORD_BYTES:
++        raise ValueError(f"expected {RECORD_BYTES} bytes, got {len(record)}")
++    if not math.isfinite(outer_scale) or outer_scale <= 0.0:
++        raise ValueError("outer_scale must be finite and positive")
++    if record[ROPE_SCALE_OFFSET + 4 : ROPE_PAYLOAD_OFFSET] != bytes(12):
++        raise ValueError("non-zero compact-record padding")
++
++    latent: list[float] = []
++    for group in range(LATENT_SCALE_BYTES):
++        scale_code = record[PACKED_LATENT_BYTES + group]
++        scale = _e4m3fn_decode_positive(scale_code) * outer_scale
++        start = group * (GROUP_ELEMENTS // 2)
++        for byte in record[start : start + GROUP_ELEMENTS // 2]:
++            latent.append(_e2m1_decode(byte & 0x0F) * scale)
++            latent.append(_e2m1_decode(byte >> 4) * scale)
++
++    rope_scale = struct.unpack_from("<f", record, ROPE_SCALE_OFFSET)[0]
++    if not math.isfinite(rope_scale) or rope_scale <= 0.0:
++        raise ValueError("invalid RoPE scale")
++    rope = tuple(
++        _e4m3fn_decode(byte) * rope_scale
++        for byte in record[ROPE_PAYLOAD_OFFSET:RECORD_BYTES]
++    )
++    return tuple(latent), rope
++
++
++def write_slot(
++    storage: bytearray, slot: int, latent: Sequence[float], rope: Sequence[float]
++) -> None:
++    """CPU slot-addressing oracle; negative slots are graph-padding no-ops."""
++    if slot < 0:
++        return
++    start = slot * RECORD_BYTES
++    end = start + RECORD_BYTES
++    if end > len(storage):
++        raise IndexError("slot exceeds storage")
++    storage[start:end] = encode_record(latent, rope)
+diff --git a/tests/v1/attention/test_pr82_b12x_368_contract.py b/tests/v1/attention/test_pr82_b12x_368_contract.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..57364b7fcd6f23d5824f7e27f9cdd193b976ffa3
+--- /dev/null
++++ b/tests/v1/attention/test_pr82_b12x_368_contract.py
+@@ -0,0 +1,215 @@
++# SPDX-License-Identifier: Apache-2.0
++from __future__ import annotations
++
++import ast
++import hashlib
++import math
++import struct
++import unittest
++from pathlib import Path
++
++from tests.v1.attention.pr82_b12x_368_reference import (
++    FLT_MIN,
++    RECORD_BYTES,
++    ROPE_PAYLOAD_OFFSET,
++    ROPE_SCALE_OFFSET,
++    decode_record,
++    encode_record,
++    write_slot,
++)
++
++ROOT = Path(__file__).resolve().parents[3]
++
++
++class TestCompactRecordGoldenVectors(unittest.TestCase):
++    def _vectors(self):
++        return {
++            "zero": ([0.0] * 512, [0.0] * 64),
++            "ramp": (
++                [((i % 37) - 18) / 3 for i in range(512)],
++                [((i % 17) - 8) * 0.25 for i in range(64)],
++            ),
++            "boundary": (
++                [
++                    (-1 if i % 2 else 1) * (6.0 if i % 7 == 0 else 0.5 * (i % 13))
++                    for i in range(512)
++                ],
++                [
++                    (-1 if i % 2 else 1) * (448.0 if i % 11 == 0 else (i + 1) / 64)
++                    for i in range(64)
++                ],
++            ),
++        }
++
++    def test_golden_sha256(self):
++        expected = {
++            "zero": "6ec5629a0bc6e8d25ab9047d09697e012dfdb4edfe2522f1222b81d308cca35c",
++            "ramp": "529eb04f5753c5fcedbad5f9e43f453f47b4aa8af1858b75d19cb5984027a3cb",
++            "boundary": (
++                "108a7255a3111dd67415a93016e62dfb231bc8d546b7486fa6787c7671dc2faf"
++            ),
++        }
++        for name, (latent, rope) in self._vectors().items():
++            with self.subTest(name=name):
++                record = encode_record(latent, rope)
++                self.assertEqual(len(record), RECORD_BYTES)
++                self.assertEqual(hashlib.sha256(record).hexdigest(), expected[name])
++                self.assertEqual(
++                    record[ROPE_SCALE_OFFSET + 4 : ROPE_PAYLOAD_OFFSET], bytes(12)
++                )
++
++    def test_zero_record_has_positive_flt_min_rope_scale(self):
++        record = encode_record([0.0] * 512, [0.0] * 64)
++        self.assertEqual(
++            struct.unpack_from("<f", record, ROPE_SCALE_OFFSET)[0], FLT_MIN
++        )
++        latent, rope = decode_record(record)
++        self.assertEqual(latent, (0.0,) * 512)
++        self.assertEqual(rope, (0.0,) * 64)
++
++    def test_decode_is_finite_and_preserves_sign(self):
++        latent = [((i % 37) - 18) / 3 for i in range(512)]
++        rope = [((i % 17) - 8) * 0.25 for i in range(64)]
++        decoded_latent, decoded_rope = decode_record(encode_record(latent, rope))
++        self.assertTrue(all(math.isfinite(value) for value in decoded_latent))
++        self.assertTrue(all(math.isfinite(value) for value in decoded_rope))
++        self.assertLess(decoded_latent[0], 0.0)
++        self.assertGreater(decoded_latent[19], 0.0)
++        self.assertLess(decoded_rope[0], 0.0)
++        self.assertGreater(decoded_rope[9], 0.0)
++
++    def test_outer_scale_only_changes_latent_region(self):
++        latent = [((i % 29) - 14) / 8 for i in range(512)]
++        rope = [((i % 13) - 6) / 16 for i in range(64)]
++        identity = encode_record(latent, rope, outer_scale=1.0)
++        scaled = encode_record(latent, rope, outer_scale=2.0)
++        self.assertEqual(identity[ROPE_SCALE_OFFSET:], scaled[ROPE_SCALE_OFFSET:])
++        self.assertNotEqual(identity[:ROPE_SCALE_OFFSET], scaled[:ROPE_SCALE_OFFSET])
++        decoded_latent, decoded_rope = decode_record(scaled, outer_scale=2.0)
++        self.assertEqual(decoded_rope, decode_record(identity)[1])
++        self.assertEqual(len(decoded_latent), len(latent))
++
++    def test_fail_closed_nonfinite_and_padding(self):
++        latent = [0.0] * 512
++        rope = [0.0] * 64
++        for bad in (float("nan"), float("inf"), float("-inf")):
++            with self.subTest(bad=bad):
++                candidate = latent.copy()
++                candidate[17] = bad
++                with self.assertRaisesRegex(ValueError, "finite"):
++                    encode_record(candidate, rope)
++        record = bytearray(encode_record(latent, rope))
++        record[300] = 1
++        with self.assertRaisesRegex(ValueError, "padding"):
++            decode_record(bytes(record))
++
++    def test_negative_slot_is_noop_and_slots_do_not_overlap(self):
++        storage = bytearray([0xA5] * (3 * RECORD_BYTES))
++        before = bytes(storage)
++        write_slot(storage, -1, [0.0] * 512, [0.0] * 64)
++        self.assertEqual(bytes(storage), before)
++        write_slot(storage, 1, [0.0] * 512, [0.0] * 64)
++        self.assertEqual(storage[:RECORD_BYTES], before[:RECORD_BYTES])
++        self.assertEqual(storage[2 * RECORD_BYTES :], before[2 * RECORD_BYTES :])
++        self.assertNotEqual(
++            storage[RECORD_BYTES : 2 * RECORD_BYTES],
++            before[RECORD_BYTES : 2 * RECORD_BYTES],
++        )
++
++
++class TestSourceAndAllocatorContract(unittest.TestCase):
++    def test_writer_layout_and_fail_closed_binding_are_in_tree(self):
++        source = (ROOT / "csrc/libtorch_stable/cache_kernels.cu").read_text()
++        self.assertIn("constexpr int kRecordBytes = 368", source)
++        self.assertIn("constexpr int kRopeOffset = 304", source)
++        self.assertIn("static_assert(kRopeScaleOffset == 288)", source)
++        self.assertIn("kv_cache.size(2) == 368", source)
++        self.assertIn("FLT_MIN", source)
++        self.assertIn("1.0f / latent_outer_scale", source)
++        bindings = (ROOT / "vllm/_custom_ops.py").read_text()
++        self.assertNotIn("_nvfp4_mla_cache_C.so", bindings)
++        self.assertIn("no external shared-library fallback is permitted", bindings)
++
++    def test_b12x_nvfp4_kwargs_do_not_change_fp8_call_signatures(self):
++        path = ROOT / "vllm/v1/attention/backends/mla/b12x_mla_sparse.py"
++        tree = ast.parse(path.read_text())
++        calls = [
++            node
++            for node in ast.walk(tree)
++            if isinstance(node, ast.Call)
++            and isinstance(node.func, ast.Attribute)
++            and node.func.attr
++            in {"_sparse_mla_decode_forward", "_sparse_mla_extend_forward"}
++        ]
++        self.assertEqual(len(calls), 6)
++        for call in calls:
++            named_kwargs = {keyword.arg for keyword in call.keywords}
++            self.assertNotIn("latent_scale", named_kwargs)
++            self.assertNotIn("scale_format", named_kwargs)
++            self.assertTrue(
++                any(
++                    keyword.arg is None
++                    and isinstance(keyword.value, ast.Call)
++                    and isinstance(keyword.value.func, ast.Attribute)
++                    and keyword.value.func.attr == "_b12x_nvfp4_kwargs"
++                    for keyword in call.keywords
++                ),
++                f"missing NVFP4-only kwargs gate at line {call.lineno}",
++            )
++        source = path.read_text()
++        self.assertIn(
++            "if self._b12x_scale_format is None:\n            return {}", source
++        )
++        self.assertIn('"scale_format": self._b12x_scale_format', source)
++        self.assertIn('"latent_scale": latent_scale', source)
++        self.assertNotIn("latent_scale=latent_scale", source)
++        self.assertNotIn("latent_scale=1.0", source)
++        self.assertNotIn("the 432 B record", source)
++        self.assertIn("KV_FP8_ROPE=1 before process start", source)
++
++    def test_nvfp4_writer_guards_outer_scale_before_cache_mutation(self):
++        source = (ROOT / "csrc/libtorch_stable/cache_kernels.cu").read_text()
++        start = source.index("__global__ void concat_and_cache_nvfp4_mla_kernel")
++        end = source.index("\n}\n#endif", start)
++        writer = source[start:end]
++        scale_load = writer.index("const float latent_outer_scale = *outer_scale;")
++        scale_guard = writer.index(
++            "if (!isfinite(latent_outer_scale) || latent_outer_scale <= 0.0f)"
++        )
++        cache_address = writer.index("uint8_t* __restrict__ token_dst")
++        first_write = writer.index("reinterpret_cast<uint64_t*>(data_dst)[0]")
++        self.assertLess(scale_load, scale_guard)
++        self.assertLess(scale_guard, cache_address)
++        self.assertLess(cache_address, first_write)
++
++    def test_allocator_math_and_dcp4_accounting(self):
++        block_size = 64
++        fp8_record = 656
++        nvfp4_record = RECORD_BYTES
++        self.assertEqual(block_size * nvfp4_record, 23_552)
++        self.assertAlmostEqual(nvfp4_record / fp8_record, 0.5609756097560976)
++        logical_pool = 1_048_576
++        dcp_world_size = 4
++        local_tokens = logical_pool // dcp_world_size
++        local_blocks = local_tokens // block_size
++        self.assertEqual(local_tokens, 262_144)
++        self.assertEqual(local_blocks, 4_096)
++        self.assertEqual(local_blocks * block_size * nvfp4_record, 96_468_992)
++        self.assertEqual(local_tokens * dcp_world_size, logical_pool)
++
++    def test_sm121a_gencode_contract(self):
++        cmake = (ROOT / "CMakeLists.txt").read_text()
++        self.assertIn('set(CUDA_REQUESTED_ARCHS "${CUDA_ARCHS}")', cmake)
++        self.assertIn('"csrc/libtorch_stable/cache_kernels.cu"', cmake)
++        self.assertIn("VLLM_STABLE_DEFAULT_GENCODE_SRCS", cmake)
++        self.assertIn('if("12.1a" IN_LIST CUDA_REQUESTED_ARCHS)', cmake)
++        self.assertIn('CUDA_ARCHS "12.1a"', cmake)
++        self.assertNotIn("FP4_SM120_GENCODE_SRCS", cmake)
++        self.assertNotIn(
++            '"csrc/libtorch_stable/cache_kernels.cu"\n      ${FP4_SM120_SRCS}',
++            cmake,
++        )
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/vllm/_custom_ops.py b/vllm/_custom_ops.py
+index 16e0df0df648c2380c274039497ea1a084125052..3efbd1a24c8561f12d61d2449006154d1db0aa8b 100644
+--- a/vllm/_custom_ops.py
++++ b/vllm/_custom_ops.py
+@@ -2625,11 +2625,36 @@ def concat_and_cache_mla(
+     kv_cache_dtype: str,
+     scale: torch.Tensor,
+ ) -> None:
++    if kv_cache_dtype == "nvfp4_ds_mla":
++        concat_and_cache_nvfp4_mla(kv_c, k_pe, kv_cache, slot_mapping, scale)
++        return
+     torch.ops._C_cache_ops.concat_and_cache_mla(
+         kv_c, k_pe, kv_cache, slot_mapping, kv_cache_dtype, scale
+     )
+ 
+ 
++def concat_and_cache_nvfp4_mla(
++    kv_c: torch.Tensor,
++    k_pe: torch.Tensor,
++    kv_cache: torch.Tensor,
++    slot_mapping: torch.Tensor,
++    scale: torch.Tensor,
++) -> None:
++    """Invoke the in-tree compact MLA writer, failing closed if absent.
++
++    The first-test candidate intentionally has no dynamic extension or private
++    binary fallback. A build that did not register the in-tree op is unusable.
++    """
++    if not hasattr(torch.ops._C_cache_ops, "concat_and_cache_nvfp4_mla"):
++        raise RuntimeError(
++            "nvfp4_ds_mla requires the in-tree SM12x compact MLA writer; "
++            "no external shared-library fallback is permitted"
++        )
++    torch.ops._C_cache_ops.concat_and_cache_nvfp4_mla(
++        kv_c, k_pe, kv_cache, slot_mapping, scale
++    )
++
++
+ def concat_and_cache_mla_rope_fused(
+     positions: torch.Tensor,
+     q_pe: torch.Tensor,
+diff --git a/vllm/config/cache.py b/vllm/config/cache.py
+index 9b96c64513b1f6789fc3aef4e40b791a2829c5c4..b1967df29241dd64309b35301df0b4e6405f25e0 100644
+--- a/vllm/config/cache.py
++++ b/vllm/config/cache.py
+@@ -25,6 +25,7 @@ CacheDType = Literal[
+     "fp8_e5m2",
+     "fp8_inc",
+     "fp8_ds_mla",
++    "nvfp4_ds_mla",
+     "turboquant_k8v4",
+     "turboquant_4bit_nc",
+     "turboquant_k3v4_nc",
+diff --git a/vllm/model_executor/layers/attention/mla_attention.py b/vllm/model_executor/layers/attention/mla_attention.py
+index 32a3e8b1a7ab64a4f16eabe37a31154040fd9068..bb646bc7aa150835b85d874c6d8213b025286cdb 100644
+--- a/vllm/model_executor/layers/attention/mla_attention.py
++++ b/vllm/model_executor/layers/attention/mla_attention.py
+@@ -426,6 +426,10 @@ class MLAAttention(nn.Module, AttentionLayerBase):
+             self.attn_backend.get_name() in sparse_ds_mla_backends
+             and is_quantized_kv_cache(kv_cache_dtype)
+             and kv_cache_dtype != "fp8_ds_mla"
++            and not (
++                self.attn_backend.get_name() == "B12X_MLA_SPARSE"
++                and kv_cache_dtype == "nvfp4_ds_mla"
++            )
+         ):
+             assert cache_config is not None
+             cache_config.cache_dtype = "fp8_ds_mla"
+@@ -724,7 +728,7 @@ class MLAAttention(nn.Module, AttentionLayerBase):
+         k_c_normed = k_c_normed[:num_actual_toks, ...]
+         k_pe = k_pe[:num_actual_toks, ...]
+ 
+-        if fp8_attention and self.kv_cache_dtype != "fp8_ds_mla":
++        if fp8_attention and self.kv_cache_dtype not in ("fp8_ds_mla", "nvfp4_ds_mla"):
+             kv_cache = kv_cache.view(current_platform.fp8_dtype())
+ 
+         # Sparse MLA impls only support forward_mqa (decode-style attention)
+diff --git a/vllm/model_executor/models/deepseek_mtp.py b/vllm/model_executor/models/deepseek_mtp.py
+index ae66860a16cdc785637fdf17445bdfc1dcf83ed9..532d513f22ec2c221bbc5031f8d60bb97ea0e062 100644
+--- a/vllm/model_executor/models/deepseek_mtp.py
++++ b/vllm/model_executor/models/deepseek_mtp.py
+@@ -306,6 +306,16 @@ class DeepSeekMultiTokenPredictorLayer(nn.Module):
+         quant_config = _maybe_disable_unserialized_modelopt_fp4_nextn(
+             config, vllm_config, get_draft_quant_config(vllm_config)
+         )
++        if quant_config is not None and hasattr(
++            quant_config, "packed_modules_mapping"
++        ):
++            quant_config.packed_modules_mapping.setdefault(
++                "gate_up_proj", ["gate_proj", "up_proj"]
++            )
++            if getattr(config, "q_lora_rank", None) is not None:
++                quant_config.packed_modules_mapping.setdefault(
++                    "fused_qkv_a_proj", ["q_a_proj", "kv_a_proj_with_mqa"]
++                )
+ 
+         self.enorm = RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+         self.hnorm = RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+diff --git a/vllm/utils/torch_utils.py b/vllm/utils/torch_utils.py
+index 12ec5b0fcc66609c3a1167c1a6c9a0f9f1189596..8f9c7876f2479e74a99ed0904656cafa33f40acc 100644
+--- a/vllm/utils/torch_utils.py
++++ b/vllm/utils/torch_utils.py
+@@ -43,6 +43,7 @@ STR_DTYPE_TO_TORCH_DTYPE = {
+     "fp8_per_token_head": torch.uint8,
+     "fp8_inc": torch.float8_e4m3fn,
+     "fp8_ds_mla": torch.uint8,
++    "nvfp4_ds_mla": torch.uint8,
+     "turboquant_k8v4": torch.uint8,
+     "turboquant_4bit_nc": torch.uint8,
+     "turboquant_k3v4_nc": torch.uint8,
+@@ -77,7 +78,7 @@ def is_quantized_kv_cache(kv_cache_dtype: str) -> bool:
+     return (
+         kv_cache_dtype.startswith("fp8")
+         or kv_cache_dtype.endswith("per_token_head")
+-        or kv_cache_dtype == "nvfp4"
++        or kv_cache_dtype in ("nvfp4", "nvfp4_ds_mla")
+     )
+ 
+ 
+diff --git a/vllm/v1/attention/backends/mla/b12x_mla_sparse.py b/vllm/v1/attention/backends/mla/b12x_mla_sparse.py
+index c3500d860f7dc3b0bdaad0eda61bbc8a16cb47ce..9323566a28f2360b7fbb5c60aab02627211d8809 100644
+--- a/vllm/v1/attention/backends/mla/b12x_mla_sparse.py
++++ b/vllm/v1/attention/backends/mla/b12x_mla_sparse.py
+@@ -69,7 +69,9 @@ logger = init_logger(__name__)
+ # wave-balanced planner picks num_splits <= this cap.
+ _DECODE_SPLIT_TILE = 64
+ _PREFILL_HEADS_PER_BLOCK = 16
+-_EXTEND_PREWARM_DONE: set[tuple[int | None, int, int, int, int, int, bool]] = set()
++_EXTEND_PREWARM_DONE: set[
++    tuple[int | None, int, int, int, int, int, bool, str, int]
++] = set()
+ 
+ 
+ def _cdiv(x: int, y: int) -> int:
+@@ -193,6 +195,7 @@ class B12xMLASparseBackend(AttentionBackend):
+         "auto",
+         "bfloat16",
+         "fp8_ds_mla",
++        "nvfp4_ds_mla",
+         "fp8",  # aliases for fp8_ds_mla on this backend
+         "fp8_e4m3",
+     ]
+@@ -272,6 +275,11 @@ class B12xMLASparseBackend(AttentionBackend):
+             # scales + 128 BF16 RoPE). Mirrors the FlashMLA / SPARSE_MLA_SM120
+             # layout; b12x's GLM_NSA decode reads the same record.
+             return (num_blocks, block_size, 656)
++        if cache_dtype_str == "nvfp4_ds_mla":
++            # Compact GLM MLA record: 256 B packed E2M1 latent + 32 B raw
++            # E4M3 group scales + 4 B FP32 RoPE scale + 12 B zero pad +
++            # 64 B E4M3 post-RoPE payload.
++            return (num_blocks, block_size, 368)
+         return (num_blocks, block_size, head_size)
+ 
+ 
+@@ -351,9 +359,7 @@ class B12xMLASparseMetadataBuilder(AttentionMetadataBuilder[B12xMLASparseMetadat
+         self.nsa_cache_seqlens_buffer = torch.empty(
+             (max_tokens,), dtype=torch.int32, device=device
+         )
+-        self.req_ids_arange = torch.arange(
+-            max_tokens, dtype=torch.int32, device=device
+-        )
++        self.req_ids_arange = torch.arange(max_tokens, dtype=torch.int32, device=device)
+ 
+     def build(
+         self,
+@@ -365,9 +371,7 @@ class B12xMLASparseMetadataBuilder(AttentionMetadataBuilder[B12xMLASparseMetadat
+         num_tokens = cm.num_actual_tokens
+ 
+         seq_lens_for_req = (
+-            cm.dcp_local_seq_lens
+-            if cm.dcp_local_seq_lens is not None
+-            else cm.seq_lens
++            cm.dcp_local_seq_lens if cm.dcp_local_seq_lens is not None else cm.seq_lens
+         )
+ 
+         # Per-token causal KV length. Hot path (pure decode, one token per req)
+@@ -553,9 +557,7 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+             from vllm.distributed.parallel_state import get_dcp_group
+ 
+             self.dcp_rank = get_dcp_group().rank_in_group
+-        self.cp_kv_cache_interleave_size = (
+-            parallel_config.cp_kv_cache_interleave_size
+-        )
++        self.cp_kv_cache_interleave_size = parallel_config.cp_kv_cache_interleave_size
+         self.total_cp_world_size = self.pcp_world_size * self.dcp_world_size
+         self.total_cp_rank = self.pcp_rank * self.dcp_world_size + self.dcp_rank
+         self.need_to_return_lse_for_decode = (
+@@ -568,6 +570,17 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+         max_num_seqs = int(scheduler_config.max_num_seqs)
+         self.block_size = 64
+         self._workspace_num_heads = self.num_heads * max(1, self.dcp_world_size)
++        # B12X ScaleFormat.NVFP4_E4M3 == 2. Supplying this on every plan,
++        # decode, and extend call selects the public 368/432 packed-latent
++        # reader. The record width itself is derived from the uint8 cache shape.
++        self._b12x_scale_format = 2 if self.kv_cache_dtype == "nvfp4_ds_mla" else None
++        if self._b12x_scale_format is not None and os.getenv("KV_FP8_ROPE", "0") != "1":
++            raise RuntimeError(
++                "nvfp4_ds_mla is the 368-byte compact record and requires "
++                "KV_FP8_ROPE=1 before process start; refusing the B12X 432-byte "
++                "reader layout instead of silently falling back"
++            )
++        self._kv_record_bytes = 368 if self.kv_cache_dtype == "nvfp4_ds_mla" else 656
+ 
+         # Split-K cap: ceil(topk / tile). Bounds the borrowed mid_out/mid_lse
+         # chunk dim and the workspace max_chunks_per_row.
+@@ -632,6 +645,18 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+         def _make_plan(
+             mode: str, max_q_rows: int, num_q_heads: int, max_batch: int
+         ) -> Any:
++            # The FP4 record needs the caps to carry the
++            # cache dtype + b12x ScaleFormat so the scratch planner sizes for
++            # the 368 B record; omit both for fp8_ds_mla so the caps stay
++            # constructible on a stock (pre-nvfp4-port) b12x tree.
++            caps_kwargs: dict[str, Any] = (
++                {}
++                if self._b12x_scale_format is None
++                else {
++                    "kv_cache_dtype": self.kv_cache_dtype,
++                    "scale_format": self._b12x_scale_format,
++                }
++            )
+             return plan_sparse_mla_scratch(
+                 B12XSparseMLAScratchCaps(
+                     device=self.device,
+@@ -646,6 +671,7 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+                     max_batch=int(max_batch),
+                     max_chunks_per_row=self._num_splits_cap,
+                     page_size=self.block_size,
++                    **caps_kwargs,
+                 )
+             )
+ 
+@@ -680,6 +706,14 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+         # Q arrives BF16; the unified kernel quantizes inside.
+         self.supports_quant_query_input = False
+ 
++    def _b12x_nvfp4_kwargs(self, latent_scale: float = 1.0) -> dict[str, Any]:
++        if self._b12x_scale_format is None:
++            return {}
++        return {
++            "scale_format": self._b12x_scale_format,
++            "latent_scale": latent_scale,
++        }
++
+     def _sync_dcp_warmup(self) -> None:
+         if self.device.type == "cuda":
+             torch.cuda.synchronize(self.device)
+@@ -707,6 +741,8 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+             int(self.topk_tokens),
+             int(self.block_size),
+             bool(self.need_to_return_lse_for_decode),
++            self.kv_cache_dtype,
++            self._kv_record_bytes,
+         )
+         if key in _EXTEND_PREWARM_DONE:
+             return
+@@ -714,10 +750,12 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+ 
+         rows_to_warm = (1, 2, 4, max(1, int(max_batched)))
+         seen_rows: set[int] = set()
+-        # GLM fp8_ds_mla cache records are 656 B/token. One page is enough:
+-        # prewarm top-k indices all point at slot zero.
++        # Match the flat page view used by forward_mqa: block_size physical
++        # slots, one row per slot, and the selected record width.
+         kv_cache = torch.zeros(
+-            (self.block_size, 1, 656), dtype=torch.uint8, device=self.device
++            (self.block_size, 1, self._kv_record_bytes),
++            dtype=torch.uint8,
++            device=self.device,
+         )
+         for rows in rows_to_warm:
+             rows = int(rows)
+@@ -756,6 +794,7 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+                     v_head_dim=self.kv_lora_rank,
+                     return_lse=True,
+                     lse_scale="natural",
++                    **self._b12x_nvfp4_kwargs(),
+                 )
+             else:
+                 self._sparse_mla_extend_forward(
+@@ -763,6 +802,7 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+                     kv_cache=kv_cache,
+                     sm_scale=self.scale,
+                     v_head_dim=self.kv_lora_rank,
++                    **self._b12x_nvfp4_kwargs(),
+                 )
+             self._sync_dcp_warmup()
+ 
+@@ -773,6 +813,14 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+         attn_metadata: B12xMLASparseMetadata,
+         layer: AttentionLayer,
+     ) -> tuple[torch.Tensor, torch.Tensor | None]:
++        latent_scale = float(getattr(layer, "_k_scale_float", 1.0))
++        if self._b12x_scale_format is not None and not (
++            np.isfinite(latent_scale) and latent_scale > 0.0
++        ):
++            raise RuntimeError(
++                "nvfp4_ds_mla requires a finite positive per-layer outer scale; "
++                f"got {latent_scale!r}"
++            )
+         # q arrives as (mqa_ql_nope[T, H, kv_lora_rank], mqa_q_pe[T, H, rope]);
+         # b12x's GLM_NSA contract wants a single contiguous [T, H, 576] tensor.
+         # Co-allocate the q-concat buffer and the per-call attention scratch in ONE
+@@ -887,6 +935,7 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+                         forced_num_splits=self._num_splits_cap,
+                         return_lse=True,
+                         lse_scale="natural",
++                        **self._b12x_nvfp4_kwargs(latent_scale),
+                     ),
+                 )
+             out = cast(
+@@ -897,6 +946,7 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+                     sm_scale=self.scale,
+                     v_head_dim=self.kv_lora_rank,
+                     forced_num_splits=self._num_splits_cap,
++                    **self._b12x_nvfp4_kwargs(latent_scale),
+                 ),
+             )
+             return out, None
+@@ -938,6 +988,7 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+                         v_head_dim=self.kv_lora_rank,
+                         return_lse=True,
+                         lse_scale="natural",
++                        **self._b12x_nvfp4_kwargs(latent_scale),
+                     ),
+                 )
+             else:
+@@ -948,6 +999,7 @@ class B12xMLASparseImpl(SparseMLAAttentionImpl[B12xMLASparseMetadata]):
+                         kv_cache=kv_cache,
+                         sm_scale=self.scale,
+                         v_head_dim=self.kv_lora_rank,
++                        **self._b12x_nvfp4_kwargs(latent_scale),
+                     ),
+                 )
+             if prefill_num_heads != num_actual_heads:
+diff --git a/vllm/v1/kv_cache_interface.py b/vllm/v1/kv_cache_interface.py
+index 400fce0d43288ce68f5c45204280b56a32a27695..90273be2f7d1569efd6b566313466a27d795afab 100644
+--- a/vllm/v1/kv_cache_interface.py
++++ b/vllm/v1/kv_cache_interface.py
+@@ -63,7 +63,7 @@ def get_kv_quant_mode(kv_cache_dtype: str) -> KVQuantMode:
+         return KVQuantMode.INT8_PER_TOKEN_HEAD
+     if kv_cache_dtype == "fp8_per_token_head":
+         return KVQuantMode.FP8_PER_TOKEN_HEAD
+-    if kv_cache_dtype == "nvfp4":
++    if kv_cache_dtype in ("nvfp4", "nvfp4_ds_mla"):
+         return KVQuantMode.NVFP4
+     if isinstance(kv_cache_dtype, str) and kv_cache_dtype.startswith("fp8"):
+         return KVQuantMode.FP8_PER_TENSOR
+@@ -393,6 +393,10 @@ class MLAAttentionSpec(FullAttentionSpec):
+ 
+     @property
+     def real_page_size_bytes(self) -> int:
++        if self.cache_dtype_str == "nvfp4_ds_mla":
++            # 368 B/token: 256 B packed E2M1 latent + 32 B raw E4M3
++            # group scales + 16 B FP32-scale/pad header + 64 B E4M3 RoPE.
++            return self.block_size * 368
+         if self.cache_dtype_str == "fp8_ds_mla":
+             if self.model_version == "deepseek_v4":
+                 # DeepseekV4: 448B NoPE + 128B RoPE + 8B fp8 scale = 584B per token.
+@@ -581,6 +585,9 @@ class SlidingWindowMLASpec(SlidingWindowSpec):
+ 
+     @property
+     def real_page_size_bytes(self) -> int:
++        if self.cache_dtype_str == "nvfp4_ds_mla":
++            # Same 368-byte compact ABI as MLAAttentionSpec.
++            return self.storage_block_size * 368
+         if self.model_version == "deepseek_v4" and self.cache_dtype_str == "fp8_ds_mla":
+             # DeepseekV4 FlashMLA: 448B NoPE + 128B RoPE + 8B fp8 scale = 584B
+             # per token. FlashInfer's contiguous bf16/fp8 cache falls through to
+@@ -607,9 +614,7 @@ class SlidingWindowMLASpec(SlidingWindowSpec):
+             and (self.model_version == "deepseek_v4" or is_deepseek_v4_model)
+         ):
+             max_model_len = vllm_config.model_config.max_model_len
+-            max_num_batched_tokens = (
+-                vllm_config.scheduler_config.max_num_batched_tokens
+-            )
++            max_num_batched_tokens = vllm_config.scheduler_config.max_num_batched_tokens
+             block_size = self.block_size
+             if self.dcp_sharded:
+                 block_size *= dcp_world_size

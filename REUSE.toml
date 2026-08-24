@@ -1,0 +1,60 @@
+version = 1
+
+[[annotations]]
+path = ["**"]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright 2026 dfi / 0xdfi"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["runtime/overlays/vllm/vllm/**", "runtime/patches/native/champion-sm121.patch"]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright contributors to the vLLM project"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["runtime/overlays/b12x/b12x/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright B12X contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = [
+  ".gitignore",
+  "README.md",
+  "benchmarks/protocol.md",
+  "docs/findings.md",
+  "docs/how-it-works.md",
+  "docs/img/capacity-vs-speed.png",
+  "docs/operations.md",
+  "docs/patches.md",
+  "recipes/launch.sh",
+  "recipes/presets.md",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright (c) 2026"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ["runtime/overlays/vllm/vllm/vllm_flash_attn/cute/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright (c) 2022, the respective contributors, as shown by the AUTHORS file."
+SPDX-License-Identifier = "BSD-3-Clause"
+
+[[annotations]]
+path = ["runtime/overlays/vllm/vllm/third_party/fmha_sm100/cute/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright (c) 2026 MiniMax"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ["runtime/overlays/vllm/vllm/third_party/flashmla/flash_mla_interface.py"]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright (c) 2025 DeepSeek"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = ["benchmarks/probe.py"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Jordan Miller"
+SPDX-License-Identifier = "MIT"

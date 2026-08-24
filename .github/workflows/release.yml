@@ -1,0 +1,79 @@
+name: draft-source-snapshot
+
+on:
+  workflow_dispatch:
+
+jobs:
+  preflight:
+    if: github.repository == '0xdfi/glm-5.2-dgx-spark-vllm027' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out exact main commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Python 3.12.3
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: 3.12.3
+      - name: Validate source and status rows
+        run: |
+          ./scripts/bootstrap_dev.sh
+          .venv/bin/python scripts/render_release_status.py --check
+          .venv/bin/python - <<'PY'
+          from champion_runtime.contracts import load_contract
+          status = load_contract('publication/status.json', 'status')
+          assert status['claims'] and all(row['status'] in {'pending', 'passed', 'failed', 'blocked', 'not-applicable'} for row in status['claims'])
+          PY
+          ./scripts/package_release.sh --output "$RUNNER_TEMP/source-package"
+      - name: Verify exact trusted source attestations when status claims PASS
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          source_status="$(.venv/bin/python -c 'import json; s=json.load(open("publication/status.json")); print(next(x["status"] for x in s["claims"] if x["claim"]=="source-complete"))')"
+          if [[ "$source_status" != passed ]]; then
+            printf '%s\n' 'source-complete is not passed; release remains a draft prerelease SOURCE SNAPSHOT.'
+            exit 0
+          fi
+          run_id="$(gh run list --repo 0xdfi/glm-5.2-dgx-spark-vllm027 --workflow attest-evidence.yml --branch main --commit "$GITHUB_SHA" --event workflow_dispatch --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')"
+          [[ -n "$run_id" ]] || { printf '%s\n' 'trusted source evidence run is absent' >&2; exit 1; }
+          mkdir -p "$RUNNER_TEMP/trusted-evidence"
+          gh run download "$run_id" --repo 0xdfi/glm-5.2-dgx-spark-vllm027 --name "source-evidence-$GITHUB_SHA" --dir "$RUNNER_TEMP/trusted-evidence"
+          for name in source-closure provenance-license source-component-license source-secret-scan large-file-scan; do
+            .venv/bin/python scripts/verify_attestation.py --receipt "$RUNNER_TEMP/trusted-evidence/$name.receipt.json" --bundle "$RUNNER_TEMP/trusted-evidence/$name.attestation.json" --evidence-root "$RUNNER_TEMP/trusted-evidence"
+          done
+
+  release:
+    needs: preflight
+    runs-on: ubuntu-24.04
+    environment: source-release
+    permissions:
+      contents: write
+    steps:
+      - name: Check out exact main commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Python 3.12.3
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: 3.12.3
+      - name: Regenerate the deterministic source package
+        run: |
+          ./scripts/bootstrap_dev.sh
+          .venv/bin/python scripts/render_release_status.py --check
+          ./scripts/package_release.sh --output "$RUNNER_TEMP/source-package"
+          printf '%s\n' 'Source-only snapshot. Pending or blocked rows are not PASS; no image or model artifact is attached.' > "$RUNNER_TEMP/source-package/RELEASE-NOTES.md"
+      - name: Create draft prerelease SOURCE SNAPSHOT
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          suffix="${GITHUB_SHA:0:12}"
+          gh release create "source-snapshot-$suffix" --repo 0xdfi/glm-5.2-dgx-spark-vllm027 --target "$GITHUB_SHA" --draft --prerelease --title "SOURCE SNAPSHOT $suffix" --notes-file "$RUNNER_TEMP/source-package/RELEASE-NOTES.md" "$RUNNER_TEMP/source-package/glm52-champion-source.tar.gz" "$RUNNER_TEMP/source-package/source-manifest.json" "$RUNNER_TEMP/source-package/SHA256SUMS"

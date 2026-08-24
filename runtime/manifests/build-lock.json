@@ -1,0 +1,148 @@
+{
+  "architecture": "aarch64",
+  "artifacts": [
+    {
+      "name": "rust-1.95.0-aarch64-unknown-linux-gnu",
+      "sha256": "3b9385d3144ac57616befa0ccbac524f857ba1b4ab074226e73a24d43568a98e",
+      "url": "https://static.rust-lang.org/dist/2026-04-16/rust-1.95.0-aarch64-unknown-linux-gnu.tar.gz"
+    },
+    {
+      "name": "torch-2.11.0+cu130-cp312-aarch64",
+      "sha256": "252f237d417fac3ba59b1635815c1f035a8241f2af038f2c076ed430932d89f1",
+      "url": "https://download-r2.pytorch.org/whl/cu130/torch-2.11.0%2Bcu130-cp312-cp312-manylinux_2_28_aarch64.whl"
+    },
+    {
+      "name": "flashinfer-python-0.6.15",
+      "sha256": "da6c339e14db4831ade0d593324f02907d44bd4b86b640faad4727d9e089477b",
+      "url": "https://files.pythonhosted.org/packages/66/a6/d3a1bf32b97f6c2c32aedb0b49fcd45259d9fb8d1131e86327b5672dd1b0/flashinfer_python-0.6.15-py3-none-any.whl"
+    },
+    {
+      "name": "flashinfer-cubin-0.6.15",
+      "sha256": "3870958b02a1752b44121d6842c531e1be2a29202f623a5fd5f08efe3eb70186",
+      "url": "https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.15/flashinfer_cubin-0.6.15-py3-none-any.whl"
+    },
+    {
+      "name": "flashinfer-jit-cache-0.6.15-cu130-aarch64",
+      "sha256": "39e4f52378a34107ee277907bdec8bf8528c13a84143de8469d6da42ad937db3",
+      "url": "https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.15/flashinfer_jit_cache-0.6.15+cu130-cp39-abi3-manylinux_2_28_aarch64.whl"
+    }
+  ],
+  "base_image": "docker.io/nvidia/cuda@sha256:450d11555d20ac8ebbbc13ebf17589c2bd42869171a90179ce7098b4a5e64c6a",
+  "build_flags": [
+    "VLLM_TARGET_DEVICE=cuda",
+    "TORCH_CUDA_ARCH_LIST=12.1a",
+    "VLLM_CUDA_ARCH_LIST=12.1a",
+    "CMAKE_CUDA_ARCHITECTURES=121a",
+    "MAX_JOBS=4"
+  ],
+  "cuda": {
+    "architectures": [
+      "12.1a"
+    ],
+    "version": "13.0.2"
+  },
+  "manifests": {
+    "native_source_sha256": "5a08643e09a686ba4ed8f4ae30fe129d3739ecbd2fefd7ba2c91502fe53df4ef",
+    "python_source_sha256": "d1127e10b6a4627ba9425f565d4a3e50b00ed5beb3f8cdfb788a963c0d2baa53"
+  },
+  "python": {
+    "version": "3.12.3"
+  },
+  "schema_version": "1.0.0",
+  "sources": [
+    {
+      "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+      "name": "vllm-python",
+      "repository": "https://github.com/vllm-project/vllm.git",
+      "tree": "1fd074d072a3f052b5202d9df51a663f30cb4693"
+    },
+    {
+      "commit": "e232d262369b8c918cf478a7a96a0fcf8127cf65",
+      "name": "vllm-native",
+      "repository": "https://github.com/vllm-project/vllm.git",
+      "tree": "e33103c3231203e5c4ad6d70815bd3df163d5ce8"
+    },
+    {
+      "commit": "334a2d75d166becea0aa640b402d521ea0a290eb",
+      "name": "b12x",
+      "repository": "https://github.com/lukealonso/b12x.git",
+      "tree": "4936c7767f26967be28f1394fc5aa1d03171b34a"
+    },
+    {
+      "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+      "name": "flash-attention",
+      "repository": "https://github.com/vllm-project/flash-attention.git",
+      "tree": "ea5138c1ecbf25bd986115ee8bd0b4d1a62368c5"
+    },
+    {
+      "commit": "087c161814d4d9c735b46c21212a09e5f8eb92fa",
+      "name": "msa",
+      "repository": "https://github.com/vllm-project/MSA.git",
+      "tree": "88d4889ebe7619b7185a08df6e0aee038ed865c1"
+    },
+    {
+      "commit": "a8f794d1251cbfd88a5011445dd5582289c727e4",
+      "name": "flashmla",
+      "repository": "https://github.com/vllm-project/FlashMLA.git",
+      "tree": "7d788825942afb6e863a6f576adc6014dc5fe300"
+    },
+    {
+      "commit": "a3e42bbbece3bb38f7c426b880315294a336e82f",
+      "name": "flashkda",
+      "repository": "https://github.com/vllm-project/FlashKDA.git",
+      "tree": "47629d456b0d13492a1af847a002287604a25347"
+    },
+    {
+      "commit": "b206834606ed5b5f21f8eed6b0683f528ea9cf7d",
+      "name": "tml-fa4",
+      "repository": "https://github.com/vllm-project/tml-fa4.git",
+      "tree": "4c9b977eeefca9ad45072ce9c44056a323ad8da5"
+    },
+    {
+      "commit": "e21c821f39a2056d68067a466c64ddc942200106",
+      "name": "deepgemm",
+      "repository": "https://github.com/vllm-project/DeepGEMM.git",
+      "tree": "f45f2a8e8e3cc017cb5aa524f4ac77be5f130db5"
+    },
+    {
+      "commit": "e74319e3405ce6d71965732880f5dc1f52371f64",
+      "name": "qutlass",
+      "repository": "https://github.com/IST-DASLab/qutlass.git",
+      "tree": "7c522b19e1341e36c63c86bbd664981dda49cd5e"
+    },
+    {
+      "commit": "da5e086dab31d63815acafdac9a9c5893b1c69e2",
+      "name": "cutlass",
+      "repository": "https://github.com/NVIDIA/cutlass.git",
+      "tree": "e41cda383c529729667cab3511a850d1f501de46"
+    },
+    {
+      "commit": "0add68262ab0a2e33b84524346cb27cbb2787356",
+      "name": "triton",
+      "repository": "https://github.com/triton-lang/triton.git",
+      "tree": "de055ee6adc5cfdd4891ccc3b50cf0a5cbd96163"
+    }
+  ],
+  "toolchain": [
+    {
+      "name": "ubuntu",
+      "version": "24.04@base-image-digest"
+    },
+    {
+      "name": "gcc",
+      "version": "13"
+    },
+    {
+      "name": "cmake",
+      "version": "3.28"
+    },
+    {
+      "name": "ninja",
+      "version": "1.11"
+    },
+    {
+      "name": "rust",
+      "version": "1.95.0"
+    }
+  ]
+}

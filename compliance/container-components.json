@@ -1,0 +1,123 @@
+{
+  "components": [
+    {
+      "distribution": "source",
+      "license": "Apache-2.0",
+      "license_text": "LICENSES/Apache-2.0.txt",
+      "name": "champion-runtime-publication",
+      "origin": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027",
+      "releasable": true
+    },
+    {
+      "distribution": "source",
+      "license": "MIT",
+      "license_text": "LICENSES/MIT.txt",
+      "name": "legacy-recipe-files-through-d1aca44",
+      "origin": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027/commit/d1aca44241a5100bf7af6a5388985cb42ffca4cd",
+      "releasable": true
+    },
+    {
+      "distribution": "source",
+      "license": "Apache-2.0",
+      "license_text": "LICENSES/Apache-2.0.txt",
+      "name": "vllm-and-b12x-derived-overlays",
+      "origin": "runtime/manifests/upstream-lock.json",
+      "releasable": true
+    },
+    {
+      "distribution": "source",
+      "license": "BSD-3-Clause",
+      "license_text": "LICENSES/BSD-3-Clause.txt",
+      "name": "flash-attention-derived-overlay",
+      "origin": "https://github.com/vllm-project/flash-attention/commit/28e862d21806bc3580207aa0ad4e2759151e9827",
+      "releasable": true
+    },
+    {
+      "distribution": "source",
+      "license": "MIT",
+      "license_text": "LICENSES/MIT.txt",
+      "name": "msa-and-flashmla-derived-overlays",
+      "origin": "runtime/manifests/upstream-lock.json",
+      "releasable": true
+    },
+    {
+      "distribution": "external-required",
+      "license": "unknown",
+      "license_text": null,
+      "name": "glm52-dfi-hybrid-corrected-v4-lmheadw8v2-checkpoint",
+      "origin": "models/checkpoint.lock.json",
+      "releasable": false,
+      "redistribution": {"ghcr": "blocked", "local-build": "external-only"}
+    },
+    {
+      "distribution": "external-required",
+      "license": "unknown",
+      "license_text": null,
+      "name": "lmhead-w8v2-sidecar",
+      "origin": "models/sidecar.lock.json",
+      "releasable": false,
+      "redistribution": {"ghcr": "blocked", "local-build": "external-only"}
+    },
+    {
+      "distribution": "image",
+      "identity": "docker.io/nvidia/cuda@sha256:450d11555d20ac8ebbbc13ebf17589c2bd42869171a90179ce7098b4a5e64c6a",
+      "license": "LicenseRef-NVIDIA-Software-License",
+      "license_reference": "https://docs.nvidia.com/cuda/eula/",
+      "name": "nvidia-cuda-13.0.2-base",
+      "origin": "runtime/manifests/build-lock.json",
+      "releasable": false,
+      "redistribution": {"ghcr": "blocked", "local-build": "allowed-from-official-base"}
+    },
+    {
+      "distribution": "image",
+      "identity": "ubuntu-24.04-packages-from-base-digest",
+      "license": "LicenseRef-Ubuntu-Package-Set",
+      "license_reference": "https://ubuntu.com/legal/intellectual-property-policy",
+      "name": "ubuntu-runtime-package-closure",
+      "origin": "docker/Dockerfile.champion",
+      "releasable": false,
+      "redistribution": {"ghcr": "blocked", "local-build": "allowed-from-official-base"}
+    },
+    {
+      "distribution": "image",
+      "identity": "runtime/requirements.lock",
+      "license": "LicenseRef-Multiple-Python-Packages",
+      "license_reference": "runtime/requirements.lock",
+      "name": "python-runtime-closure",
+      "origin": "runtime/requirements.lock",
+      "releasable": false,
+      "redistribution": {"ghcr": "blocked", "local-build": "allowed"}
+    },
+    {
+      "distribution": "image",
+      "identity": "sha256:252f237d417fac3ba59b1635815c1f035a8241f2af038f2c076ed430932d89f1",
+      "license": "BSD-3-Clause",
+      "license_text": "LICENSES/BSD-3-Clause.txt",
+      "name": "pytorch-2.11-cu130",
+      "origin": "runtime/manifests/build-lock.json",
+      "releasable": false,
+      "redistribution": {"ghcr": "blocked", "local-build": "allowed"}
+    },
+    {
+      "distribution": "image",
+      "identity": "flashinfer-0.6.15-artifact-hashes",
+      "license": "Apache-2.0",
+      "license_text": "LICENSES/Apache-2.0.txt",
+      "name": "flashinfer-runtime-artifacts",
+      "origin": "runtime/manifests/build-lock.json",
+      "releasable": false,
+      "redistribution": {"ghcr": "blocked", "local-build": "allowed"}
+    },
+    {
+      "distribution": "image",
+      "identity": "runtime/manifests/overlay-files.json",
+      "license": "Apache-2.0 AND BSD-3-Clause AND MIT",
+      "license_reference": "compliance/source-provenance.json",
+      "name": "built-vllm-b12x-native-runtime",
+      "origin": "docker/Dockerfile.champion",
+      "releasable": false,
+      "redistribution": {"ghcr": "blocked", "local-build": "allowed"}
+    }
+  ],
+  "schema_version": "1.0.0"
+}

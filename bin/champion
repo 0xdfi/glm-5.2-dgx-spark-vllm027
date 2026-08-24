@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+# Copyright 2026 dfi / 0xdfi
+# SPDX-License-Identifier: Apache-2.0
+set -Eeuo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+COMMAND="${1:-help}"
+shift || true
+
+need_env() {
+  [[ -x "$ROOT/.venv/bin/python" ]] || {
+    printf '%s\n' 'development environment missing; run ./bin/champion bootstrap' >&2
+    exit 69
+  }
+}
+
+usage() {
+  cat <<'EOF'
+Usage: bin/champion COMMAND [arguments]
+
+  bootstrap                 install the hash-locked development environment
+  configure [PATH]          create a mode-0600 symbolic cluster configuration
+  verify-hosts [PROFILE]    verify four-host compatibility without mutation
+  build ...                 build from public pinned source
+  pull                      require the future convenience-image publication gate
+  render PROFILE            render argv, environment, and EngineCore JSON
+  launch PROFILE            run the explicit hardened fleet state machine
+  verify PROFILE --static   run source/AST contracts only (no live receipt)
+  verify PROFILE --evidence DIR
+                            evaluate captured evidence offline as PROVISIONAL
+  battery PROFILE --attempt-dir DIR
+                            evaluate captured batteries offline as PROVISIONAL
+  status                    print authenticated publication status, if present
+  stage-image               stage only an authenticated accepted builder image
+  stop [RUN_ID]             stop exact owned ranks 3->1->0; preserve containers/images
+  help
+EOF
+}
+
+case "$COMMAND" in
+  bootstrap) exec "$ROOT/scripts/bootstrap_dev.sh" "$@" ;;
+  configure)
+    target="${1:-$ROOT/cluster.env}"
+    [[ ! -e "$target" ]] || { printf 'refusing to overwrite %s\n' "$target" >&2; exit 73; }
+    cp "$ROOT/cluster.env.example" "$target"
+    chmod 0600 "$target"
+    printf 'created %s; replace symbolic site values and keep credentials elsewhere\n' "$target"
+    ;;
+  verify-hosts)
+    need_env
+    exec "$ROOT/scripts/launch_cluster.sh" verify-hosts "${1:-fast}"
+    ;;
+  build)
+    need_env
+    exec "$ROOT/scripts/build_runtime.sh" "$@"
+    ;;
+  pull)
+    printf '%s\n' 'pull: BLOCKED: convenience-image publication gate is not passed' >&2
+    exit 78
+    ;;
+  render)
+    need_env
+    exec "$ROOT/.venv/bin/python" "$ROOT/scripts/render_launch.py" \
+      --preset "${1:-fast}" --cluster "${CHAMPION_CLUSTER_ENV:-$ROOT/cluster.env}" --format json
+    ;;
+  launch)
+    need_env
+    exec "$ROOT/scripts/launch_cluster.sh" launch "${1:-fast}"
+    ;;
+  verify)
+    need_env
+    profile="${1:-}"
+    mode="${2:-}"
+    case "$profile" in
+      fast|fast-320k) profile=fast-320k ;;
+      balanced|balanced-650k) profile=balanced-650k ;;
+      large|large-1m) profile=large-1m ;;
+      *) printf '%s\n' 'verify: profile is required' >&2; exit 78 ;;
+    esac
+    if [[ "$mode" == "--static" && $# -eq 2 ]]; then
+      exec "$ROOT/.venv/bin/python" -m pytest "$ROOT/runtime/tests/test_runtime_overlays.py" -q
+    fi
+    if [[ "$mode" == "--evidence" && $# -eq 3 ]]; then
+      evidence_dir="$3"
+      exec "$ROOT/.venv/bin/python" - "$ROOT" "$profile" "$evidence_dir" <<'PY'
+import json, sys
+from pathlib import Path
+root, profile, evidence = Path(sys.argv[1]), sys.argv[2], Path(sys.argv[3])
+sys.path.insert(0, str(root))
+from scripts.verify_correctness import compare_correctness
+from scripts.verify_runtime import verify_runtime_evidence
+from scripts.stress_champion import validate_executor_contract
+required = {name: evidence / name for name in (
+    "subject.json", "runtime.json", "correctness-reference.json",
+    "correctness-candidate.json", "stress-report.json",
+)}
+missing = [name for name, path in required.items() if not path.is_file()]
+if missing:
+    raise SystemExit("verify evidence missing: " + ", ".join(missing))
+subject = json.loads(required["subject.json"].read_text())
+preset = json.loads((root / "presets" / f"{profile}.json").read_text())
+engine = preset["effective_engine"]
+expected = {key: engine[key] for key in ("max_model_len", "kv_cache_dtype", "decode_context_parallel_size")}
+expected["adaptive_mtp"] = engine["adaptive_mtp"]["k"]
+components = [
+    verify_runtime_evidence(json.loads(required["runtime.json"].read_text()), subject, expected),
+    compare_correctness(json.loads(required["correctness-reference.json"].read_text()), json.loads(required["correctness-candidate.json"].read_text())),
+    validate_executor_contract(json.loads(required["stress-report.json"].read_text())),
+]
+print(json.dumps({"result": "PROVISIONAL", "claim": "offline-verification-suite", "profile": profile, "components": components}, indent=2, sort_keys=True))
+PY
+    fi
+    printf '%s\n' 'verify: use --static or --evidence DIR; live verification is not implicit' >&2
+    exit 78
+    ;;
+  battery)
+    need_env
+    profile="${1:-}"
+    if [[ "${2:-}" == "--attempt-dir" && $# -eq 3 ]]; then
+      exec "$ROOT/.venv/bin/python" "$ROOT/scripts/evaluate_battery.py" --attempt-dir "$3"
+    fi
+    printf '%s\n' 'battery: use --attempt-dir DIR; live benchmark traffic is not implicit' >&2
+    exit 78
+    ;;
+  status)
+    need_env
+    status_file="${CHAMPION_STATUS_FILE:-$ROOT/publication/status.json}"
+    [[ "$status_file" == /* ]] || status_file="$ROOT/$status_file"
+    if [[ -r "$status_file" ]]; then
+      exec "$ROOT/.venv/bin/python" -m json.tool "$status_file"
+    fi
+    printf '%s\n' '{"schema_version":"1.0.0","status":"provisional","reason":"authenticated gate status is not installed in this commit"}'
+    ;;
+  stage-image)
+    need_env
+    exec "$ROOT/scripts/stage_image.sh" "$@"
+    ;;
+  stop)
+    need_env
+    exec "$ROOT/scripts/stop_cluster.sh" "$@"
+    ;;
+  help|-h|--help) usage ;;
+  *) usage >&2; exit 64 ;;
+esac

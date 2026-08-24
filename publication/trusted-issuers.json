@@ -1,0 +1,24 @@
+{
+  "issuer": "https://token.actions.githubusercontent.com",
+  "protected_environment": "source-evidence",
+  "refs": [
+    "refs/heads/main",
+    "refs/tags/v*"
+  ],
+  "repository": "0xdfi/glm-5.2-dgx-spark-vllm027",
+  "runner_policy": {
+    "cryptographically_proven_by_dsse": false,
+    "enforcement": "committed-workflow-policy",
+    "groups": [
+      "champion-builders",
+      "champion-controllers"
+    ],
+    "labels": [
+      "self-hosted",
+      "ephemeral",
+      "ARM64"
+    ]
+  },
+  "schema_version": "1.0.0",
+  "workflow": ".github/workflows/attest-evidence.yml"
+}

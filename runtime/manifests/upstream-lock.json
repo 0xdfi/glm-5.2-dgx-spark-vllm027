@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0.0",
+  "sources": [
+    {
+      "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+      "license": "Apache-2.0",
+      "name": "vllm-python",
+      "repository": "https://github.com/vllm-project/vllm.git",
+      "role": "build",
+      "tree": "1fd074d072a3f052b5202d9df51a663f30cb4693"
+    },
+    {
+      "commit": "e232d262369b8c918cf478a7a96a0fcf8127cf65",
+      "license": "Apache-2.0",
+      "name": "vllm-native",
+      "repository": "https://github.com/vllm-project/vllm.git",
+      "role": "build",
+      "tree": "e33103c3231203e5c4ad6d70815bd3df163d5ce8"
+    },
+    {
+      "commit": "334a2d75d166becea0aa640b402d521ea0a290eb",
+      "license": "Apache-2.0",
+      "name": "b12x",
+      "repository": "https://github.com/lukealonso/b12x.git",
+      "role": "build",
+      "tree": "4936c7767f26967be28f1394fc5aa1d03171b34a"
+    },
+    {
+      "commit": "28e862d21806bc3580207aa0ad4e2759151e9827",
+      "license": "BSD-3-Clause",
+      "name": "flash-attention",
+      "repository": "https://github.com/vllm-project/flash-attention.git",
+      "role": "donor-and-build",
+      "tree": "ea5138c1ecbf25bd986115ee8bd0b4d1a62368c5"
+    },
+    {
+      "commit": "087c161814d4d9c735b46c21212a09e5f8eb92fa",
+      "license": "MIT",
+      "name": "msa",
+      "repository": "https://github.com/vllm-project/MSA.git",
+      "role": "donor-and-build",
+      "tree": "88d4889ebe7619b7185a08df6e0aee038ed865c1"
+    },
+    {
+      "commit": "a8f794d1251cbfd88a5011445dd5582289c727e4",
+      "license": "MIT",
+      "name": "flashmla",
+      "repository": "https://github.com/vllm-project/FlashMLA.git",
+      "role": "donor-and-build",
+      "tree": "7d788825942afb6e863a6f576adc6014dc5fe300"
+    },
+    {
+      "commit": "a3e42bbbece3bb38f7c426b880315294a336e82f",
+      "license": "Apache-2.0",
+      "name": "flashkda",
+      "repository": "https://github.com/vllm-project/FlashKDA.git",
+      "role": "build",
+      "tree": "47629d456b0d13492a1af847a002287604a25347"
+    },
+    {
+      "commit": "b206834606ed5b5f21f8eed6b0683f528ea9cf7d",
+      "license": "BSD-3-Clause",
+      "name": "tml-fa4",
+      "repository": "https://github.com/vllm-project/tml-fa4.git",
+      "role": "build",
+      "tree": "4c9b977eeefca9ad45072ce9c44056a323ad8da5"
+    },
+    {
+      "commit": "e21c821f39a2056d68067a466c64ddc942200106",
+      "license": "MIT",
+      "name": "deepgemm",
+      "repository": "https://github.com/vllm-project/DeepGEMM.git",
+      "role": "build",
+      "tree": "f45f2a8e8e3cc017cb5aa524f4ac77be5f130db5"
+    },
+    {
+      "commit": "e74319e3405ce6d71965732880f5dc1f52371f64",
+      "license": "Apache-2.0",
+      "name": "qutlass",
+      "repository": "https://github.com/IST-DASLab/qutlass.git",
+      "role": "build",
+      "tree": "7c522b19e1341e36c63c86bbd664981dda49cd5e"
+    },
+    {
+      "commit": "da5e086dab31d63815acafdac9a9c5893b1c69e2",
+      "license": "BSD-3-Clause",
+      "name": "cutlass",
+      "repository": "https://github.com/NVIDIA/cutlass.git",
+      "role": "build",
+      "tree": "e41cda383c529729667cab3511a850d1f501de46"
+    },
+    {
+      "commit": "0add68262ab0a2e33b84524346cb27cbb2787356",
+      "license": "MIT",
+      "name": "triton",
+      "repository": "https://github.com/triton-lang/triton.git",
+      "role": "runtime-version-lock",
+      "tree": "de055ee6adc5cfdd4891ccc3b50cf0a5cbd96163"
+    }
+  ]
+}

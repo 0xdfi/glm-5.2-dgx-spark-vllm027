@@ -1,0 +1,21 @@
+{
+  "architecture": "12.1a",
+  "expected_library": "vllm/_C_stable_libtorch.abi3.so",
+  "historical_reference_object": {
+    "purpose": "informational comparison only",
+    "require_bit_identity": false,
+    "sha256": "be9feccb01c0532d849fa30aab6a0edc809773be22ba8bb4a734040a9e4f95b8"
+  },
+  "patch": "runtime/patches/native/champion-sm121.patch",
+  "patch_sha256": "55344cbfd51765ba1ad77f4bf4c12724617c123e5d0c8d32f795b6203b5c30dc",
+  "required_symbols": [
+    "torch.ops._C_cache_ops.concat_and_cache_nvfp4_mla"
+  ],
+  "schema_version": "1.0.0",
+  "target_source_manifest_sha256": "1a1840d859e8abd3f9a27448411a7b9da70c6c49d0fb69562f1983cb259bdb84",
+  "upstream": {
+    "commit": "e232d262369b8c918cf478a7a96a0fcf8127cf65",
+    "repository": "https://github.com/vllm-project/vllm.git",
+    "tree": "e33103c3231203e5c4ad6d70815bd3df163d5ce8"
+  }
+}

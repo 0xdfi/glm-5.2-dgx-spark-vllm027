@@ -1,0 +1,40 @@
+{
+  "prompts": [
+    {
+      "id": "prose",
+      "kind": "prose",
+      "prompt": "Describe how a wooden footbridge changes after a summer rain in exactly three sentences.",
+      "sampling": {"free_runs": 5, "seeds": [101, 102, 103, 104, 105], "teacher_forced": true, "temperature_zero_repeats": 10},
+      "validator": {"type": "sentence-count", "value": 3}
+    },
+    {
+      "id": "code",
+      "kind": "code",
+      "prompt": "Write a Python function named stable_unique that preserves first occurrence order.",
+      "sampling": {"free_runs": 5, "seeds": [201, 202, 203, 204, 205], "teacher_forced": true, "temperature_zero_repeats": 10},
+      "validator": {"type": "python-ast", "value": "stable_unique"}
+    },
+    {
+      "id": "reasoning",
+      "kind": "reasoning",
+      "prompt": "A box has 3 red, 4 blue, and 5 green tokens. How many unordered pairs contain two different colors? Return the integer and a short derivation.",
+      "sampling": {"free_runs": 5, "seeds": [301, 302, 303, 304, 305], "teacher_forced": true, "temperature_zero_repeats": 10},
+      "validator": {"type": "integer-answer", "value": 47}
+    },
+    {
+      "id": "json",
+      "kind": "json",
+      "prompt": "Return JSON only with keys status, count, and tags; use status ok, count 3, tags [a,b,c].",
+      "sampling": {"free_runs": 5, "seeds": [401, 402, 403, 404, 405], "teacher_forced": true, "temperature_zero_repeats": 10},
+      "validator": {"type": "json-schema", "value": {"required": ["status", "count", "tags"]}}
+    },
+    {
+      "id": "tool-call",
+      "kind": "tool-call",
+      "prompt": "Call get_weather for Boston with unit celsius; do not answer in prose.",
+      "sampling": {"free_runs": 5, "seeds": [501, 502, 503, 504, 505], "teacher_forced": true, "temperature_zero_repeats": 10},
+      "validator": {"type": "tool-call", "value": {"arguments": {"location": "Boston", "unit": "celsius"}, "name": "get_weather"}}
+    }
+  ],
+  "schema_version": "1.0.0"
+}

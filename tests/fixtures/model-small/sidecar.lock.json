@@ -1,0 +1,29 @@
+{
+  "artifact_id": "sidecar.fixture",
+  "artifact_type": "sidecar",
+  "distribution": {
+    "method": "external-required",
+    "source": null
+  },
+  "integrity": {
+    "files": [
+      {
+        "path": "sidecar.fixture",
+        "sha256": "0d00e3572be8ecb3f514e43f2269ccaedb0d499895962d866e0d4bc00fa59329",
+        "size": 16
+      }
+    ],
+    "status": "complete"
+  },
+  "rights": {
+    "evidence": [
+      {
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "source": "fixture://sidecar-license"
+      }
+    ],
+    "license": "Apache-2.0",
+    "status": "verified-external-use"
+  },
+  "schema_version": "1.0.0"
+}

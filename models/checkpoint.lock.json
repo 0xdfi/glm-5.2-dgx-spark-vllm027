@@ -1,0 +1,27 @@
+{
+  "artifact_id": "glm52-dfi-hybrid-corrected-v4-lmheadw8v2",
+  "artifact_type": "checkpoint",
+  "base_model": {
+    "repository": "QuantTrio/GLM-5.2-Int4-Int8Mix",
+    "revision": "1d3bcfe5ec549ecd000fd80b37f191183842e983"
+  },
+  "distribution": {
+    "method": "external-required",
+    "source": null
+  },
+  "integrity": {
+    "files": [],
+    "status": "unknown"
+  },
+  "notes": [
+    "The exact corrected checkpoint is not published in this repository.",
+    "No partial config digest or tensor prefix is represented as a whole-artifact identifier.",
+    "A complete shard manifest must replace this unknown boundary before exact-champion verification."
+  ],
+  "rights": {
+    "evidence": [],
+    "license": null,
+    "status": "unknown"
+  },
+  "schema_version": "1.0.0"
+}

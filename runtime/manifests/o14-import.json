@@ -1,0 +1,425 @@
+{
+  "effective_champion": {
+    "b12x_overlay_file_count": 5,
+    "build_a_kernel": "v0",
+    "build_a_v1_excluded": true,
+    "later_champion_source_overrides": {
+      "b12x": {
+        "attention/indexer/paged.py": {
+          "sha256": "d654783235800f50a9434c0463cffe7f6c50f5efe53586ca2ef388f26adb5a66",
+          "stage": "r17-b12x-two-level-fold-repair"
+        },
+        "attention/indexer/scratch.py": {
+          "sha256": "c3eb82ab405685130e4d6092960bcaf01e8e4a58e9c8f731deb0e9c1ea51c453",
+          "stage": "r17-b12x-two-level-fold-repair"
+        }
+      },
+      "vllm": {
+        "model_executor/layers/sparse_attn_indexer.py": {
+          "sha256": "113d85a97d7f4ef1047ebd2381e09b0a83bc7346f35bd2265100fabc9f3580fc",
+          "stage": "r17-dcp2-v12l+dcp4-b4"
+        },
+        "model_executor/models/deepseek_mtp.py": {
+          "sha256": "c40240abf3acd15cc18376744cd8046673c8ec2b3b18c61813ba029b65cbc010",
+          "stage": "r17-dcp2-v12l"
+        },
+        "model_executor/models/deepseek_v2.py": {
+          "sha256": "c83ad34fa2477c425606effb6816621379029886c1fa81ea8bdcbe76ffd948ea",
+          "stage": "r17-dcp2-late-dcp-bind"
+        },
+        "v1/attention/backends/mla/sparse_utils.py": {
+          "sha256": "7e1ca1c76b81c09f6198dd51e4649b4cd1ae0314311d1604464c3566ff624adf",
+          "stage": "r17-dcp2-v3+dcp4"
+        }
+      }
+    },
+    "vllm_overlay_file_count": 74
+  },
+  "live_b4_reconciliation": {
+    "reason": "No live serving host or image was inspected for this publication batch.",
+    "status": "not-verified"
+  },
+  "public_source_inventory": {
+    "b12x_file_count": 3,
+    "native_path_count": 14,
+    "vllm_file_count": 74,
+    "vllm_files": [
+      {
+        "effective_champion_overlay": true,
+        "path": "_custom_ops.py",
+        "sha256": "9dc6ad31edad514dbae2a373cf44c18c4da0fc6209e79e7b682c78769d99fe8f"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "_nvfp4_ds_mla_loader.py",
+        "sha256": "7dcfd492fef33748b963f82d9b6687fa1c1ec43fbaa52cec71c371c38dc94127"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "compilation/b12x_capture.py",
+        "sha256": "415c8256d04ceec82956d739e7d23a441f2b53975ce39ecc30333e7867e6e322"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "config/cache.py",
+        "sha256": "7e713db60c2cfa6ac37b04517ee8d6dd0f63087073e72382c1d062105fa0fb1b"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "config/scheduler.py",
+        "sha256": "02baf920dd3f195efc8098f1da90e09ca4e6b3432aeb69326d280e4882524a7f"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "config/speculative.py",
+        "sha256": "8e0a1e683195ea38d56d163469e284c401cf6e67d7e5101baeae3ee209f6261e"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "config/vllm.py",
+        "sha256": "5875954216b765032b32058d7fcdd2e253f8b3066bb2dc7d9142e0c4005eec81"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "distributed/parallel_state.py",
+        "sha256": "3edf727e9eb5db3f234aa1958fa3a3c3eb0c635e6ff5ed92f7036c36f539bbec"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "engine/arg_utils.py",
+        "sha256": "4132ac6cd0eabf29dcf14d0c22decfb9d7595be5d78e2b112d5622fca88abf78"
+      },
+      {
+        "effective_champion_overlay": false,
+        "path": "model_executor/layers/attention/builda_bmm_v0.py",
+        "sha256": "965b6aeaf3a0c41abefec89a31592f6b8061a053053831be7c5e6f7560857515"
+      },
+      {
+        "effective_champion_overlay": false,
+        "path": "model_executor/layers/attention/builda_bmm_v1.py",
+        "sha256": "ee3145bee53a67dbff35f0556dfdcc21ac89a7038f3bd22cd0687928e38053e4"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "model_executor/layers/attention/mla_attention.py",
+        "sha256": "832ca14c86ed08787ff44f0a2fe11b171212e5d39a027423ffd109bdc380cdb3"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "model_executor/layers/fused_moe/experts/marlin_moe.py",
+        "sha256": "7219771f1143b6456bc755e6b08ed545dfc77618a8b9623d54e7432917f1491f"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "model_executor/layers/logits_processor.py",
+        "sha256": "5ab8890051bf82da012a2c7357bda60fb011469ebf42ff647fffba8416fe4dfa"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "model_executor/layers/sparse_attn_indexer.py",
+        "sha256": "602296521e6d1663e0868dbae1dbcfe719d387c90c21d3a25e04e6f081e0169d"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "model_executor/models/deepseek_mtp.py",
+        "sha256": "d13e6d171704de61e1a24c43b011ea3b29fff6f305b1efa09f732785f4f71f94"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "third_party/flashmla/flash_mla_interface.py",
+        "sha256": "91a9915f43dc61585544f1f55837972f105d7981b7b33c937bc9c5c91c1bed36"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "third_party/fmha_sm100/cute/interface.py",
+        "sha256": "72b62c09a24d828c7d05efcbc18cc1a7616fa7797877a972c2a7e62e8043d16d"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "third_party/fmha_sm100/cute/sparse_index_utils.py",
+        "sha256": "da1953b87dbc5ecc4ce1c13ca520461879ea117d207720a760e06f2022e39c24"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "third_party/fmha_sm100/cute/src/common/tma_utils.py",
+        "sha256": "829026061e7c54e7c74608594c26d0e524296c0632d25167a6f21c1522c135bf"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "third_party/fmha_sm100/cute/src/common/utils.py",
+        "sha256": "757b836337e27d3b70ca4d6792a08c0b6918456142e78311e26cb021dd7d14ba"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "third_party/fmha_sm100/cute/src/sm100/build_k2q_csr/__init__.py",
+        "sha256": "d0fe70a55f7c363bde2caea9d069c40dc5e03ed39443e7fc14d80b05dbeee13c"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "third_party/fmha_sm100/cute/src/sm100/build_k2q_csr/build_k2q_csr.cu",
+        "sha256": "5c34f70ea9c5a71ae700bf9f7ac88fd13dee52115300f7811df00fb4faae1f98"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "third_party/fmha_sm100/cute/src/sm100/fwd/atten_fwd.py",
+        "sha256": "1f19d8b59e914adafc73e2b99b6d31820d7fc13f7e0f32dfd4f6f4f32e6838a1"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "third_party/fmha_sm100/cute/src/sm100/fwd/atten_fwd_nvfp4_kv.py",
+        "sha256": "e8796ba3e7717beac28b638fc6c337c5260d77fbce6dd4307e76200888596338"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "third_party/fmha_sm100/cute/src/sm100/fwd_decode/atten_fwd.py",
+        "sha256": "d4c3a60a6a360c94f3d804bb97b0832e76faca7296e8f43f08b249af08ba12ee"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "third_party/fmha_sm100/cute/src/sm100/fwd_decode/tile_scheduler.py",
+        "sha256": "5f37f92d0d6a76b8e06748e2a81be9c9d490f46baf73efa11afb951ea361590c"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "third_party/fmha_sm100/cute/src/sm100/prepare_k2q_csr.py",
+        "sha256": "429ab94135902eec524ec8a0db31857aa51b067c525330b2009412384601199f"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "utils/torch_utils.py",
+        "sha256": "217b3645c88bd43c4701875b9b47420df9e90dedab13e869e86e3a18124d2a7f"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/attention/backends/mla/b12x_mla_sparse.py",
+        "sha256": "3b9fec983cb3ac96b8a647a7c628d56a39392a363f99cf92c64fbd8dabbf55d1"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/attention/backends/mla/indexer.py",
+        "sha256": "1c76b608949330437e4fa23ff86e4396dc118f1aa55b27497dad53a5f627a8a4"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/attention/backends/registry.py",
+        "sha256": "8a247140a6ac25ac4b37ac9cc2c49c182aac38b01310d8f7e665abf7a767099e"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/core/sched/scheduler.py",
+        "sha256": "37861e012864d9f7ccf8c917522376240c81b57d4faa696f9424dab65c9d4c46"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/kv_cache_interface.py",
+        "sha256": "409925da986214d4ac2256877c49db8431a2a4295d79b8c72c5f55539ac0afda"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/spec_decode/dynamic/acceptance_length.py",
+        "sha256": "4b4e17521cb9bb22e2b8062e57f6bee43c170abc54d3b126bef409706cf3fbd9"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/spec_decode/dynamic/depth_ladder.py",
+        "sha256": "674487015cd59f5528c98517276f59a5c78a79b510dc93e2ab06989b6a338e9f"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/worker/gpu/cudagraph_utils.py",
+        "sha256": "e07c39092588abb7a6b8e725350dfd249946edeb7c6a6316cf03cb5a1655c258"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/worker/gpu/model_runner.py",
+        "sha256": "427ea9863494ff8dd2b7be7aeed37bbc60eed168a37605be58b93496d3b52d9f"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/worker/gpu/spec_decode/autoregressive/speculator.py",
+        "sha256": "55a01bd8fd8c0ed55df614cd740db098d0d6e4f42f4535235aa09f2d58b8503e"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/worker/gpu/spec_decode/dflash/speculator.py",
+        "sha256": "be7f7e2e49145545a1594cade47e919601b398332a05759abed0f85e36a389b2"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/worker/gpu/spec_decode/speculator.py",
+        "sha256": "8672a8e2eec0bd67f4e37d893b3d3ca3d694c74fbb025ea54f7d216737a4853c"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/worker/gpu/spec_decode/utils.py",
+        "sha256": "b474672b7c3d33cf4c644de72a71313a9bb4d6aaa0e819d0f8b01daac9b14ef4"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "v1/worker/gpu/warmup.py",
+        "sha256": "915a9d7df0cbc5ca80cbfeb8af17f1040d43ace15340fd3138ce0376f831fb9f"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/bench_utils.py",
+        "sha256": "a655fbaccd3d23de2cacca6e8a7ae7782aa4ee3200cea94f9c73585f2ffe50cc"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/benchmark_flash_attention_fp8.py",
+        "sha256": "440daf774dc2b0f1df1928cf3291af8825724b974180313fcd26757d26229fbe"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/blackwell_helpers.py",
+        "sha256": "4bc8cd5ca91fa99d4591fd6fa1e74c8199e8d3ae19ba8d04dac39065a2c12259"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/block_sparse_utils.py",
+        "sha256": "eb22f64966b747bfebc2768962ecf12e24fcc785bedb326d69abdb424c9614de"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/block_sparsity.py",
+        "sha256": "f33aff9300e7c51cdff41f19396b2f6df6d0126e2f9dab9afd1b54c197c4fd49"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/compute_block_sparsity.py",
+        "sha256": "338221501026c46633fe07a3fdc38ed489d46ceec49a337edd1ba7299b312fc7"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/cute_dsl_utils.py",
+        "sha256": "e8248aa0edc593bdb2e90397281a91b0547bb333ba3c672c45e3ce42ed46b07a"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/flash_bwd.py",
+        "sha256": "7d837ae65f36a3402a5c4ec474fec2a81f94f6ccb667639d2c9a4bd48958e1c4"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/flash_bwd_postprocess.py",
+        "sha256": "eac9381af7af5279f6045c8f6435a98c3b418c86bbd7d2b76d47cf43d9f84d1b"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/flash_bwd_preprocess.py",
+        "sha256": "8f60606a3b479f2708ff74cf559db8ce32b2862b4b7f54a0031bb81c1eeec2da"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/flash_bwd_sm100.py",
+        "sha256": "a2a171e0e689ebdcb9e6b16149dede35bd593a00571f811c006575032e925114"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/flash_bwd_sm90.py",
+        "sha256": "27a555a86ae176d0c06ad26068c8ed4f474bc36701107c7be081075473f3d6aa"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/flash_fwd.py",
+        "sha256": "5e5a264e7dad4510f8e82a55fe4f5c4796a9cf093324ee2e872437e903a14d26"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/flash_fwd_mla_sm100.py",
+        "sha256": "f92bd275ba55f6baa31f0f284ffd53fdf9e54ab323e9b7fa686d04d94dc5ed5d"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/flash_fwd_sm100.py",
+        "sha256": "7844228084105f29210f3537091593e4c47edb6e9b4ed20fc90416fb6d0d2f94"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/flash_fwd_sm120.py",
+        "sha256": "d7cf5412d8efe20ea0f11f8b4a796e8fde860d992b1c66964f46603e42c7fb49"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/flash_fwd_sm90.py",
+        "sha256": "d38af4cd561c2b7446ab7b9a952f8b94beef3974f79e4fa75c6a88eeb8aa8f89"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/interface.py",
+        "sha256": "75fd5ab8f0633b57fdb19dbc23d88b3c59d04e333c697189dd70bd59b46f539f"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/mask.py",
+        "sha256": "84fef7d20f89c5a4059880c7d722747e6ac140067f8f9d983d55835085822ac5"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/named_barrier.py",
+        "sha256": "e9e2680224af6ba8260e36aae4bb2fdcf589b75bd0d07050df7c4c59e1c716dd"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/pack_gqa.py",
+        "sha256": "5e87a7ff15594a3a8afb2433ab43330bdb90748b846eea2b4cacb8c11271a4e4"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/paged_kv.py",
+        "sha256": "88153ebd664bf27d9cd62c67147dc0ff4ca488905fa48b93b702c339d8163b6c"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/sm100_hd256_2cta_fmha_backward.py",
+        "sha256": "f61f6170e9962374cb9ac94012596038a73aa1c6eb94d88463e9a998a2bc2f64"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/sm100_hd256_2cta_fmha_backward_dkdvkernel.py",
+        "sha256": "a0edcbe136435d42d01659933100d7ad2adc026c2cc80cc9f457b2357f1b747c"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/sm100_hd256_2cta_fmha_backward_dqkernel.py",
+        "sha256": "aca836a6c27792f81384e989037a04f5dfb3a85911a25a248b336036a06b078e"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/sm100_hd256_2cta_fmha_forward.py",
+        "sha256": "be6c00e3de09bb4b100116a8b6980c070f242f8b01cfd8b42b852ab4c048ba07"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/softmax.py",
+        "sha256": "41fae18b27bab59b9769087b70b270e280809189c92ca88e8774d9addbbb7016"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/testing.py",
+        "sha256": "2292b589dc04d2a6822c65aab3a588faed8c7a307f54e1348500519ae130796f"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/tile_scheduler.py",
+        "sha256": "1e1ad40509be76327ee77430ac3a73bb27d5e6f2b0819c57bdcf7d875e6cf38e"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/topk_gather_kv.py",
+        "sha256": "fd6aaf431c145670c2209d00da8b7863f9d083a6d2bff2f57aa97ee74349352d"
+      },
+      {
+        "effective_champion_overlay": true,
+        "path": "vllm_flash_attn/cute/utils.py",
+        "sha256": "0adb633cddf07a50c9a5b89280a2acd344cd4b709357e44ede0055b00d67e3d2"
+      }
+    ]
+  },
+  "schema_version": "1.0.0",
+  "source": {
+    "commit": "9ba54db8f7c852eabb90372f7dcf47f87eafbe20",
+    "repository": "https://github.com/0xdfi/GLM-5.2-Harness-O14-4x-DGX-Spark.git",
+    "tree": "46e1d7837747c080d7300496abe9aa5f7c0e127d"
+  }
+}

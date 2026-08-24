@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools==80.10.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "champion-runtime-publication"
+version = "0.1.0"
+description = "Contract and evidence tooling for the GLM-5.2 champion runtime publication"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "jsonschema==4.26.0",
+  "rfc8785==0.1.4",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pip==26.2.1",
+  "pytest==9.1.1",
+  "reuse[charset-normalizer]==6.2.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = ["requires_sm121: requires an SM121 CUDA runtime with torch and triton"]
+
+[tool.setuptools.packages.find]
+include = ["champion_runtime*"]

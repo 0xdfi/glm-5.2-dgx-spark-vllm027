@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -u
+host="${1:?host required}"; shift
+command_text="$*"
+printf 'ssh %s %s\n' "$host" "$command_text" >>"${CHAMPION_FAKE_LOG:?}"
+scenario="${CHAMPION_FAKE_SCENARIO:-healthy}"
+image_id='sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
+case "$command_text" in
+  'uname -m') printf '%s\n' aarch64 ;;
+  'getconf _NPROCESSORS_ONLN') printf '%s\n' 20 ;;
+  *'nvidia-smi --query-gpu=name,compute_cap'*) printf '%s\n' 'NVIDIA GB10, 12.1' ;;
+  *'nvidia-smi --query-compute-apps'*) [[ "$scenario" == live-gpu ]] && printf '%s\n' 4242 ;;
+  *"awk /MemAvailable:"*|*"awk '/MemAvailable:"*)
+    # shellcheck disable=SC2016
+    if [[ "$command_text" == *'($2*1024)-6442450944'* ]]; then
+      printf '%s\n' 122406567936
+    elif [[ "$scenario" == low-memory ]]; then
+      printf '%s\n' 100000000
+    else
+      printf '%s\n' 125829120
+    fi
+    ;;
+  *'ps -C polkitd -o rss='*) printf '%s\n' 64000 ;;
+  *"awk /SwapTotal:"*|*"awk '/SwapTotal:"*) printf '%s\n' 1048576 ;;
+  *'rdma link show'*) printf '%s\n' 'link rocep1s0f1/1 state ACTIVE physical_state LINK_UP' ;;
+  *'lscpu -p=CPU,MAXMHZ,NODE'*)
+    printf '%s\n' '# CPU,MAXMHZ,NODE'
+    for cpu in $(seq 0 19); do printf '%s,4000.0000,0\n' "$cpu"; done
+    ;;
+  *'ss -ltnH'*) [[ "$scenario" == busy-port ]] && printf '%s\n' 'LISTEN 0 128 *:8211' ;;
+  *'docker ps -a --filter'*) ;;
+  *"docker ps --format"*) [[ "$scenario" == protected ]] && printf '%s\n' protected-production ;;
+  *'docker image inspect'*) printf '%s\n' "$image_id" ;;
+  *'sha256sum '*shard-000.fixture*) printf '%s  %s\n' de3b138aa085f01bd5f297f6bafe383f3329a144aa1f23b6bff6f265f898d9b0 "${command_text##* }" ;;
+  *'sha256sum '*shard-001.fixture*) printf '%s  %s\n' 7a868a62f2f954275db963f7a505ffa3e9fe906d05106db32873a1b3220d62d2 "${command_text##* }" ;;
+  *'sha256sum '*sidecar.fixture*) printf '%s  %s\n' 0d00e3572be8ecb3f514e43f2269ccaedb0d499895962d866e0d4bc00fa59329 "${command_text##* }" ;;
+  *'docker run '*) printf '%064d\n' 1 ;;
+  *'docker inspect '*'{{.Image}}|'*)
+    if [[ "$scenario" == unknown-identity ]]; then printf '%s\n' 'sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb|other-run|true'
+    else printf '%s|fixture-run|true\n' "$image_id"; fi
+    ;;
+  *'docker inspect '*'{{.State.Running}}|{{.State.OOMKilled}}|{{.RestartCount}}'*) printf '%s\n' 'true|false|0' ;;
+  *'docker inspect '*'{{.HostConfig.CpusetCpus}}|'*) printf '%s\n' '5-9,15-19|0' ;;
+  *'docker update --cpuset-cpus 5-9,15-19'*) [[ "$scenario" != pin-fail ]] ;;
+  *'docker update --cpuset-cpus 0-19'*) ;;
+  *'docker logs '*) printf '%s\n' 'NCCL INFO Using network IB' ;;
+  *'docker exec '*'cat /run/champion/serve.log'*) printf '%s\n' 'NCCL INFO Using network IB' ;;
+  *'docker top '*) printf '%s\n' '123 raylet --block' '456 python3 -m vllm.entrypoints.openai.api_server' ;;
+  *'docker exec '*'ray status'*) printf '%s\n' 'Usage: 4.0/4.0 GPU' ;;
+  *'docker exec '*) ;;
+  *'docker stop '*) printf '%s\n' stopped ;;
+  *'docker system df'*) printf '%s\n' ok ;;
+  *'docker save '*) printf '%s\n' image-stream ;;
+  *'docker load'*) printf '%s\n' Loaded ;;
+  *'install -d '*) ;;
+  *'test -'*) ;;
+  *) ;;
+esac

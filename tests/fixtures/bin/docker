@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+printf 'docker-local %s\n' "$*" >>"${CHAMPION_FAKE_LOG:?}"
+exit 0

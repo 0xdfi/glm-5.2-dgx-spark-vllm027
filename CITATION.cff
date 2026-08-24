@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this runtime publication, please cite it using this metadata."
+title: "GLM-5.2 Champion Runtime Publication"
+type: software
+authors:
+  - name: "dfi / 0xdfi"
+repository-code: "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027"
+license: Apache-2.0
+version: 0.1.0
+date-released: 2026-08-23

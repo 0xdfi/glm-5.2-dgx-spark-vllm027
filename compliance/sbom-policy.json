@@ -1,0 +1,7 @@
+{
+  "all_layers": true,
+  "format": "spdx-json",
+  "schema_version": "1.0.0",
+  "status": "blocked-until-immutable-tool-digest-selected",
+  "syft": {"tool_image": null, "version": null}
+}

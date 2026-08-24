@@ -1,8 +1,10 @@
-# Logs and evidence dumps — this repo ships the *recipe*, not raw run artifacts
+# Logs and local evidence dumps
 *.log
 *.jsonl
 *.out
-evidence/
+evidence/local/
+evidence/scratch/
+*.receipt.local.json
 runs/
 *-battery-*/
 launch-*.log
@@ -11,13 +13,58 @@ serve-*.log
 # JIT / compile caches
 jit-cache*/
 .cache/
+.venv/
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
-# Local overrides / secrets
+# Local overrides and credentials
 .env
+.env.*
+!.env.example
+cluster.env
 *.local
 *.local.sh
+.credentials/
+credentials/
+secrets/
+*.credentials
+*.secret
+*.pem
+*.key
+
+# Build products
+.build/
+build/
+dist/
+wheelhouse/
+*.egg-info/
+.scratch/
+
+# Model weights, native binaries, wheels, and archives are not Git sources
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.gguf
+*.onnx
+*.whl
+*.so
+*.dylib
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+
+# Keep source and license manifests visible to Git.
+!models/**/*.lock.json
+!runtime/manifests/**
+!compliance/**/*.json
 
 # OS cruft
 .DS_Store

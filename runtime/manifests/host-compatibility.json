@@ -1,0 +1,39 @@
+{
+  "capabilities": {
+    "architecture": "aarch64",
+    "cpu": {
+      "fast_cpuset": "5-9,15-19",
+      "fast_min_mhz": 3900,
+      "fast_numa_node": 0,
+      "online_count": 20
+    },
+    "gpu": {
+      "compute_capability": "12.1",
+      "count_per_host": 1,
+      "model": "NVIDIA GB10"
+    },
+    "host_count": 4,
+    "memory": {
+      "max_peer_spread_mib": 512,
+      "min_available_gib": 116,
+      "polkit_max_rss_mib": 128,
+      "swap_max_used_gib": 6
+    },
+    "network": {
+      "require_active_rdma": true,
+      "require_unique_fabric_addresses": true
+    }
+  },
+  "comparison_drift_fields": [
+    "host_kernel",
+    "dgx_firmware",
+    "nvidia_driver",
+    "docker",
+    "containerd",
+    "rdma_driver",
+    "rdma_firmware",
+    "cpu_microcode",
+    "bios"
+  ],
+  "schema_version": "1.0.0"
+}

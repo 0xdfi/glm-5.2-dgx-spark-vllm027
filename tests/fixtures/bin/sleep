@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+printf 'sleep idle-soak %s\n' "${1:-}" >>"${CHAMPION_FAKE_LOG:?}"

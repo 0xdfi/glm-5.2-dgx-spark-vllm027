@@ -1,0 +1,121 @@
+name: attest-source-evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Fixed evidence class; unavailable classes fail before specialized runners.
+        required: true
+        default: source
+        type: choice
+        options:
+          - source
+          - build
+          - live
+          - registry-readback
+
+jobs:
+  blocked-mode:
+    if: inputs.mode != 'source'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Refuse unavailable evidence class
+        run: |
+          printf '%s\n' 'BLOCKED: build, live, and registry-readback prerequisites and rights are incomplete.' >&2
+          exit 78
+
+  source:
+    if: github.repository == '0xdfi/glm-5.2-dgx-spark-vllm027' && github.ref == 'refs/heads/main' && inputs.mode == 'source'
+    runs-on: ubuntu-24.04
+    environment: source-evidence
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Install Python 3.12.3
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: 3.12.3
+      - name: Clone public main without credentials
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          git init -q "$RUNNER_TEMP/source"
+          git -C "$RUNNER_TEMP/source" remote add origin https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git
+          git -C "$RUNNER_TEMP/source" fetch origin refs/heads/main
+          git -C "$RUNNER_TEMP/source" checkout -q --detach FETCH_HEAD
+          test "$(git -C "$RUNNER_TEMP/source" rev-parse HEAD)" = "$EXPECTED_SHA"
+      - name: Run source gates and compose fixed evidence bundle
+        working-directory: ${{ runner.temp }}/source
+        run: |
+          ./scripts/bootstrap_dev.sh
+          make test
+          make contracts
+          make lint-manifests
+          .venv/bin/reuse lint
+          .venv/bin/python scripts/register_provenance.py --staged --check
+          mkdir -p "$RUNNER_TEMP/source-evidence/runtime/manifests" "$RUNNER_TEMP/source-evidence/compliance" "$RUNNER_TEMP/source-evidence/LICENSES"
+          .venv/bin/python scripts/verify_source.py --report "$RUNNER_TEMP/source-evidence/source-closure.report.json" --receipt "$RUNNER_TEMP/source-evidence/source-closure.receipt.json"
+          .venv/bin/python scripts/audit_licenses.py --strict --report "$RUNNER_TEMP/source-evidence/provenance-license.report.json" --receipt "$RUNNER_TEMP/source-evidence/provenance-license.receipt.json"
+          .venv/bin/python scripts/audit_container_licenses.py --scope source --report "$RUNNER_TEMP/source-evidence/source-component-license.report.json" --receipt "$RUNNER_TEMP/source-evidence/source-component-license.receipt.json"
+          ./scripts/scan_secrets.sh --mode source --root . --revision HEAD --report "$RUNNER_TEMP/source-evidence/source-secret-scan.report.json" --receipt "$RUNNER_TEMP/source-evidence/source-secret-scan.receipt.json"
+          .venv/bin/python scripts/scan_large_files.py --root . --revision HEAD --report "$RUNNER_TEMP/source-evidence/large-file-scan.report.json" --receipt "$RUNNER_TEMP/source-evidence/large-file-scan.receipt.json"
+          .venv/bin/python scripts/verify_publication_source.py --evidence-root "$RUNNER_TEMP/source-evidence" --receipt "$RUNNER_TEMP/source-evidence/source-closure.receipt.json" --receipt "$RUNNER_TEMP/source-evidence/provenance-license.receipt.json" --receipt "$RUNNER_TEMP/source-evidence/source-component-license.receipt.json" --receipt "$RUNNER_TEMP/source-evidence/source-secret-scan.receipt.json" --receipt "$RUNNER_TEMP/source-evidence/large-file-scan.receipt.json" --output "$RUNNER_TEMP/source-evidence/source-complete-candidate.receipt.json"
+          cp runtime/manifests/build-lock.json runtime/manifests/overlay-files.json "$RUNNER_TEMP/source-evidence/runtime/manifests/"
+          cp compliance/provenance.json compliance/source-provenance.json "$RUNNER_TEMP/source-evidence/compliance/"
+          cp REUSE.toml NOTICE "$RUNNER_TEMP/source-evidence/"
+          cp LICENSES/*.txt "$RUNNER_TEMP/source-evidence/LICENSES/"
+          ./scripts/package_release.sh --output "$RUNNER_TEMP/source-evidence/source-package"
+          ./scripts/scan_secrets.sh --mode image --root "$RUNNER_TEMP/source-evidence" --report "$RUNNER_TEMP/source-evidence/bundle-secret-scan.json"
+      - name: Attest source closure receipt
+        id: attest_source_closure
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-path: ${{ runner.temp }}/source-evidence/source-closure.receipt.json
+      - name: Preserve source closure DSSE bundle
+        run: cp '${{ steps.attest_source_closure.outputs.bundle-path }}' "$RUNNER_TEMP/source-evidence/source-closure.attestation.json"
+      - name: Attest provenance receipt
+        id: attest_provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-path: ${{ runner.temp }}/source-evidence/provenance-license.receipt.json
+      - name: Preserve provenance DSSE bundle
+        run: cp '${{ steps.attest_provenance.outputs.bundle-path }}' "$RUNNER_TEMP/source-evidence/provenance-license.attestation.json"
+      - name: Attest component receipt
+        id: attest_components
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-path: ${{ runner.temp }}/source-evidence/source-component-license.receipt.json
+      - name: Preserve component DSSE bundle
+        run: cp '${{ steps.attest_components.outputs.bundle-path }}' "$RUNNER_TEMP/source-evidence/source-component-license.attestation.json"
+      - name: Attest secret-scan receipt
+        id: attest_secrets
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-path: ${{ runner.temp }}/source-evidence/source-secret-scan.receipt.json
+      - name: Preserve secret-scan DSSE bundle
+        run: cp '${{ steps.attest_secrets.outputs.bundle-path }}' "$RUNNER_TEMP/source-evidence/source-secret-scan.attestation.json"
+      - name: Attest large-file receipt
+        id: attest_large_files
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-path: ${{ runner.temp }}/source-evidence/large-file-scan.receipt.json
+      - name: Preserve large-file DSSE bundle
+        run: cp '${{ steps.attest_large_files.outputs.bundle-path }}' "$RUNNER_TEMP/source-evidence/large-file-scan.attestation.json"
+      - name: Attest provisional candidate
+        id: attest_candidate
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-path: ${{ runner.temp }}/source-evidence/source-complete-candidate.receipt.json
+      - name: Preserve candidate DSSE bundle
+        run: cp '${{ steps.attest_candidate.outputs.bundle-path }}' "$RUNNER_TEMP/source-evidence/source-complete-candidate.attestation.json"
+      - name: Upload only the fixed sanitized evidence directory
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0
+        with:
+          name: source-evidence-${{ github.sha }}
+          path: ${{ runner.temp }}/source-evidence
+          if-no-files-found: error
+          retention-days: 30

@@ -1,0 +1,141 @@
+# syntax=docker/dockerfile:1.7
+# Copyright 2026 dfi / 0xdfi
+# SPDX-License-Identifier: Apache-2.0
+
+ARG CUDA_BASE=docker.io/nvidia/cuda@sha256:450d11555d20ac8ebbbc13ebf17589c2bd42869171a90179ce7098b4a5e64c6a
+FROM ${CUDA_BASE} AS source-builder
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PIP_BREAK_SYSTEM_PACKAGES=1 \
+    TORCH_CUDA_ARCH_LIST=12.1a \
+    VLLM_CUDA_ARCH_LIST=12.1a \
+    CMAKE_CUDA_ARCHITECTURES=121a \
+    VLLM_TARGET_DEVICE=cuda \
+    MAX_JOBS=4 \
+    PYTHONUNBUFFERED=1
+
+# Package revisions are explicit; if the digest-pinned Ubuntu archive no longer
+# serves one, the build fails rather than silently selecting a newer toolchain.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates=20240203 \
+      curl=8.5.0-2ubuntu10.6 \
+      git=1:2.43.0-1ubuntu7.3 \
+      gcc-13=13.3.0-6ubuntu2~24.04 \
+      g++-13=13.3.0-6ubuntu2~24.04 \
+      libibverbs-dev=50.0-2build2 \
+      python3=3.12.3-0ubuntu2 \
+      python3-dev=3.12.3-0ubuntu2 \
+      python3-pip=24.0+dfsg-1ubuntu1.3 \
+      unzip=6.0-28ubuntu4.1 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY runtime/requirements.lock /opt/champion/runtime/requirements.lock
+ADD --checksum=sha256:3b9385d3144ac57616befa0ccbac524f857ba1b4ab074226e73a24d43568a98e \
+    https://static.rust-lang.org/dist/2026-04-16/rust-1.95.0-aarch64-unknown-linux-gnu.tar.gz /tmp/rust.tar.gz
+RUN mkdir /tmp/rust-install \
+    && tar -xzf /tmp/rust.tar.gz -C /tmp/rust-install --strip-components=1 \
+    && /tmp/rust-install/install.sh --prefix=/usr/local --without=rust-docs \
+    && rm -rf /tmp/rust.tar.gz /tmp/rust-install \
+    && rustc --version | grep -Fx 'rustc 1.95.0 (59807616e 2026-04-14)'
+RUN python3 -m pip install --no-cache-dir -r /opt/champion/runtime/requirements.lock
+
+ADD --checksum=sha256:252f237d417fac3ba59b1635815c1f035a8241f2af038f2c076ed430932d89f1 \
+    https://download-r2.pytorch.org/whl/cu130/torch-2.11.0%2Bcu130-cp312-cp312-manylinux_2_28_aarch64.whl /tmp/torch.whl
+RUN python3 -m pip install --no-cache-dir --no-deps /tmp/torch.whl && rm /tmp/torch.whl
+
+# Each clone is commit and tree locked. External-project variables below force
+# vLLM/CMake to consume these verified trees rather than perform hidden fetches.
+RUN set -eux; \
+    clone_locked() { name="$1"; url="$2"; commit="$3"; tree="$4"; \
+      git init "/src/$name"; git -C "/src/$name" remote add origin "$url"; \
+      git -C "/src/$name" fetch --depth=1 origin "$commit"; \
+      git -C "/src/$name" checkout --detach FETCH_HEAD; \
+      test "$(git -C "/src/$name" rev-parse HEAD)" = "$commit"; \
+      test "$(git -C "/src/$name" rev-parse HEAD^{tree})" = "$tree"; \
+      git -C "/src/$name" submodule update --init --recursive --depth=1; \
+    }; \
+    clone_locked vllm-python https://github.com/vllm-project/vllm.git 6e448d0ea9bf3d88d898b65449ca6dc2aec170ac 1fd074d072a3f052b5202d9df51a663f30cb4693; \
+    clone_locked vllm-native https://github.com/vllm-project/vllm.git e232d262369b8c918cf478a7a96a0fcf8127cf65 e33103c3231203e5c4ad6d70815bd3df163d5ce8; \
+    clone_locked b12x https://github.com/lukealonso/b12x.git 334a2d75d166becea0aa640b402d521ea0a290eb 4936c7767f26967be28f1394fc5aa1d03171b34a; \
+    clone_locked flash-attention https://github.com/vllm-project/flash-attention.git 28e862d21806bc3580207aa0ad4e2759151e9827 ea5138c1ecbf25bd986115ee8bd0b4d1a62368c5; \
+    clone_locked msa https://github.com/vllm-project/MSA.git 087c161814d4d9c735b46c21212a09e5f8eb92fa 88d4889ebe7619b7185a08df6e0aee038ed865c1; \
+    clone_locked flashmla https://github.com/vllm-project/FlashMLA.git a8f794d1251cbfd88a5011445dd5582289c727e4 7d788825942afb6e863a6f576adc6014dc5fe300; \
+    clone_locked flashkda https://github.com/vllm-project/FlashKDA.git a3e42bbbece3bb38f7c426b880315294a336e82f 47629d456b0d13492a1af847a002287604a25347; \
+    clone_locked tml-fa4 https://github.com/vllm-project/tml-fa4.git b206834606ed5b5f21f8eed6b0683f528ea9cf7d 4c9b977eeefca9ad45072ce9c44056a323ad8da5; \
+    clone_locked deepgemm https://github.com/vllm-project/DeepGEMM.git e21c821f39a2056d68067a466c64ddc942200106 f45f2a8e8e3cc017cb5aa524f4ac77be5f130db5; \
+    clone_locked qutlass https://github.com/IST-DASLab/qutlass.git e74319e3405ce6d71965732880f5dc1f52371f64 7c522b19e1341e36c63c86bbd664981dda49cd5e; \
+    clone_locked cutlass https://github.com/NVIDIA/cutlass.git da5e086dab31d63815acafdac9a9c5893b1c69e2 e41cda383c529729667cab3511a850d1f501de46
+
+ENV VLLM_CUTLASS_SRC_DIR=/src/cutlass \
+    VLLM_FLASH_ATTN_SRC_DIR=/src/flash-attention \
+    FMHA_SM100_SRC_DIR=/src/msa \
+    FLASH_MLA_SRC_DIR=/src/flashmla \
+    FLASH_KDA_SRC_DIR=/src/flashkda \
+    TML_FA4_SRC_DIR=/src/tml-fa4 \
+    DEEPGEMM_SRC_DIR=/src/deepgemm \
+    QUTLASS_SRC_DIR=/src/qutlass
+
+COPY runtime/overlays/vllm/vllm/ /opt/champion/overlays/vllm/vllm/
+COPY runtime/overlays/b12x/b12x/ /opt/champion/overlays/b12x/b12x/
+COPY runtime/kernels/builda_bmm_v0.py /opt/champion/kernels/builda_bmm_v0.py
+COPY runtime/patches/native/champion-sm121.patch /opt/champion/patches/native/champion-sm121.patch
+COPY runtime/manifests/ /opt/champion/manifests/
+COPY scripts/verify_image.py /opt/champion/tools/verify_image.py
+COPY LICENSE NOTICE CREDITS.md /opt/champion/legal/
+COPY LICENSES/ /opt/champion/legal/LICENSES/
+COPY compliance/source-provenance.json /opt/champion/legal/source-provenance.json
+
+RUN set -eux; \
+    cp -a /opt/champion/overlays/vllm/vllm/. /src/vllm-python/vllm/; \
+    install -m 0644 /opt/champion/kernels/builda_bmm_v0.py /src/vllm-python/vllm/model_executor/layers/attention/builda_bmm_v0.py; \
+    ! find /src/vllm-python -name '*builda_bmm_v1*' -print -quit | grep -q .; \
+    cp -a /opt/champion/overlays/b12x/b12x/. /src/b12x/b12x/; \
+    git -C /src/vllm-native apply --check /opt/champion/patches/native/champion-sm121.patch; \
+    git -C /src/vllm-native apply /opt/champion/patches/native/champion-sm121.patch; \
+    python3 /opt/champion/tools/verify_image.py --source-tree /opt/champion
+
+RUN python3 -m pip wheel --no-build-isolation --no-deps --wheel-dir /wheels /src/vllm-python \
+    && python3 -m pip wheel --no-build-isolation --no-deps --wheel-dir /wheels-native /src/vllm-native \
+    && python3 -m pip wheel --no-build-isolation --no-deps --wheel-dir /wheels /src/b12x \
+    && mkdir -p /native-extract \
+    && unzip -q '/wheels-native/vllm-*.whl' 'vllm/_C_stable_libtorch.abi3.so' -d /native-extract
+
+FROM ${CUDA_BASE} AS champion-runtime
+ENV DEBIAN_FRONTEND=noninteractive PIP_BREAK_SYSTEM_PACKAGES=1 PYTHONUNBUFFERED=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates=20240203 \
+      libibverbs1=50.0-2build2 \
+      python3=3.12.3-0ubuntu2 \
+      python3-pip=24.0+dfsg-1ubuntu1.3 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY runtime/requirements.lock /opt/champion/runtime/requirements.lock
+ADD --checksum=sha256:252f237d417fac3ba59b1635815c1f035a8241f2af038f2c076ed430932d89f1 \
+    https://download-r2.pytorch.org/whl/cu130/torch-2.11.0%2Bcu130-cp312-cp312-manylinux_2_28_aarch64.whl /tmp/torch.whl
+ADD --checksum=sha256:da6c339e14db4831ade0d593324f02907d44bd4b86b640faad4727d9e089477b \
+    https://files.pythonhosted.org/packages/66/a6/d3a1bf32b97f6c2c32aedb0b49fcd45259d9fb8d1131e86327b5672dd1b0/flashinfer_python-0.6.15-py3-none-any.whl /tmp/flashinfer-python.whl
+ADD --checksum=sha256:3870958b02a1752b44121d6842c531e1be2a29202f623a5fd5f08efe3eb70186 \
+    https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.15/flashinfer_cubin-0.6.15-py3-none-any.whl /tmp/flashinfer-cubin.whl
+ADD --checksum=sha256:39e4f52378a34107ee277907bdec8bf8528c13a84143de8469d6da42ad937db3 \
+    https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.15/flashinfer_jit_cache-0.6.15+cu130-cp39-abi3-manylinux_2_28_aarch64.whl /tmp/flashinfer-jit.whl
+RUN python3 -m pip install --no-cache-dir --no-deps /tmp/torch.whl /tmp/flashinfer-*.whl \
+    && rm /tmp/torch.whl /tmp/flashinfer-*.whl \
+    && python3 -m pip install --no-cache-dir -r /opt/champion/runtime/requirements.lock
+
+COPY --from=source-builder /wheels /wheels
+COPY --from=source-builder /native-extract/vllm/_C_stable_libtorch.abi3.so /opt/vllm-extra/nvfp4_ds_mla/_C_stable_libtorch.abi3.so
+RUN python3 -m pip install --no-cache-dir --no-deps /wheels/*.whl && rm -rf /wheels
+
+COPY --from=source-builder /opt/champion/manifests /opt/champion/manifests
+COPY --from=source-builder /opt/champion/legal /opt/champion/legal
+ARG BUILD_SUBJECT_ID
+ARG SOURCE_RELEASE_ID
+LABEL org.opencontainers.image.source="https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027" \
+      org.opencontainers.image.licenses="Apache-2.0 AND BSD-3-Clause AND MIT" \
+      com.0xdfi.champion.build-subject-id="${BUILD_SUBJECT_ID}" \
+      com.0xdfi.champion.source-release-id="${SOURCE_RELEASE_ID}" \
+      com.0xdfi.champion.source-closure="o14-public-verified" \
+      com.0xdfi.champion.live-b4-parity="not-verified" \
+      com.0xdfi.champion.builda.active="v0"
+
+CMD ["python3", "-m", "vllm.entrypoints.openai.api_server", "--help"]
