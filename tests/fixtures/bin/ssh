@@ -151,8 +151,8 @@ case "$command_text" in
   *'docker exec '*) ;;
   *'docker stop '*) printf '%s\n' stopped ;;
   *'docker system df'*) printf '%s\n' ok ;;
-  *'docker save '*) printf '%s\n' image-stream ;;
-  *'docker load'*) printf '%s\n' Loaded ;;
+  *'docker save '*) dd if=/dev/zero bs=65536 count=4 2>/dev/null ;;
+  *'docker load'*) cat >/dev/null; printf '%s\n' Loaded ;;
   *'install -d '*) ;;
   *'test -'*) ;;
   *) ;;

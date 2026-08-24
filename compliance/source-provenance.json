@@ -2091,7 +2091,7 @@
       "origin_path": "scripts/lib/fleet.sh",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "scripts/lib/fleet.sh",
-      "target_sha256": "5333865199023eafef827eaf3b98225f40e86aae9d6049aac9a8ca9113b394e0"
+      "target_sha256": "f44245e6452cff7e8919594936534e8cd23c8514c482d6a6432dc4880ddd0a51"
     },
     {
       "base_sha256": null,
@@ -2182,7 +2182,7 @@
       "origin_path": "scripts/stage_image.sh",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "scripts/stage_image.sh",
-      "target_sha256": "7da41fe1c0cb8bd7f80cdd6c3f8e205411884c51a5aee95531d1a0bd28b93244"
+      "target_sha256": "94887f84c042e9dafe78beba36a596e49fffbb275896890a169ca1fc6f267b45"
     },
     {
       "base_sha256": null,
@@ -2377,7 +2377,7 @@
       "origin_path": "tests/fixtures/bin/ssh",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/fixtures/bin/ssh",
-      "target_sha256": "ac904fc6972d6d8d6dc981c5da9317c37b300e1a3e4deb84819ab31310510101"
+      "target_sha256": "b53f0cd650db289546d28fa4ab5d4c5b7546f6f45c414a9eb1741c5100899bd1"
     },
     {
       "base_sha256": null,

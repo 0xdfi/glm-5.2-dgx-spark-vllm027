@@ -32,6 +32,11 @@ fleet_remote() {
   "${CHAMPION_SSH_BIN:-ssh}" "$host" "$@" </dev/null
 }
 
+fleet_remote_with_stdin() {
+  local host="$1"; shift
+  "${CHAMPION_SSH_BIN:-ssh}" "$host" "$@"
+}
+
 fleet_docker() {
   local host="$1"; shift
   fleet_remote "$host" "${CHAMPION_REMOTE_DOCKER_BIN:-docker}" "$@"
