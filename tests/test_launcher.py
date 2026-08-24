@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CHAMPION = ROOT / "bin" / "champion"
 FIXTURE_BIN = ROOT / "tests" / "fixtures" / "bin"
-CLUSTER = ROOT / "tests" / "fixtures" / "cluster.env"
+CLUSTER = ROOT / "tests" / "fixtures" / "cluster-fixture.env"
 
 
 def invoke(*args: str, scenario: str = "healthy", tmp_path: Path | None = None):

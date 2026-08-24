@@ -10,7 +10,7 @@ from champion_runtime.contracts import load_contract
 
 ROOT = Path(__file__).resolve().parents[1]
 RENDER = ROOT / "scripts" / "render_launch.py"
-CLUSTER = ROOT / "tests" / "fixtures" / "cluster.env"
+CLUSTER = ROOT / "tests" / "fixtures" / "cluster-fixture.env"
 
 EXPECTED = {
     "fast-320k": (1, 320000, 10232320000),

@@ -2273,7 +2273,7 @@
       "origin_path": "scripts/verify_source.py",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "scripts/verify_source.py",
-      "target_sha256": "35ad83057b8ea0ca0bddbad448e28bf82dbf1142f6a465c44c84459eed21e2f7"
+      "target_sha256": "3efa68cb94fc531166276404a3dfd0e32eb111f08bfab6ed5af9f67a0cbb9d4b"
     },
     {
       "base_sha256": null,
@@ -2339,6 +2339,19 @@
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/fixtures/bin/ssh",
       "target_sha256": "387d6083dcd9281367dcf2f468a38de5f7e9d401fd0001542d175f30d0983e7c"
+    },
+    {
+      "base_sha256": null,
+      "classification": "project-apache",
+      "copyright": "Copyright 2026 dfi / 0xdfi",
+      "evidence": [],
+      "license": "Apache-2.0",
+      "modified_by": "dfi / 0xdfi",
+      "origin_commit": null,
+      "origin_path": "tests/fixtures/cluster.env",
+      "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
+      "path": "tests/fixtures/cluster-fixture.env",
+      "target_sha256": "e954c4535c60f90550ed43a94956e476b87dc182e236f53a3f7851056a401232"
     },
     {
       "base_sha256": null,
@@ -2585,7 +2598,7 @@
       "origin_path": "tests/test_launcher.py",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/test_launcher.py",
-      "target_sha256": "4d5d60bcefb5864a1fe988b3d71a3a007cc97e26df3b24fb6fdf43adc8270525"
+      "target_sha256": "a48e02fc357a53570f2c6d9c2db3d18fe9e4d3386c42e80ed4b6c5aade24e75f"
     },
     {
       "base_sha256": null,
@@ -2624,7 +2637,7 @@
       "origin_path": "tests/test_presets.py",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/test_presets.py",
-      "target_sha256": "5dffe75ffc4829020a317ee8c4d97d34844b33bc3a918ad964cc834c025b2266"
+      "target_sha256": "5f7dd97123064d722546d05b24c2e5cbb6393f3f026eacb2ef4adf3da6eb805a"
     },
     {
       "base_sha256": null,

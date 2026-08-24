@@ -104,7 +104,7 @@ def verify_source_tree(root: Path, *, require_clean: bool = True, run_license_au
             raise SourceVerificationError(f"{lock}: source release must not bundle model artifacts")
     for name in ("fast-320k", "balanced-650k", "large-1m"):
         expected = json.loads((root / f"tests/fixtures/{name}.rendered.json").read_text())
-        if render(name, root / "tests/fixtures/cluster.env") != expected:
+        if render(name, root / "tests/fixtures/cluster-fixture.env") != expected:
             raise SourceVerificationError(f"rendered preset snapshot drifted: {name}")
     if run_license_audit:
         result = subprocess.run([sys.executable, str(root / "scripts/audit_licenses.py"), "--strict"], cwd=root, capture_output=True, text=True)
