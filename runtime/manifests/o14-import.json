@@ -15,6 +15,10 @@
         }
       },
       "vllm": {
+        "envs.py": {
+          "sha256": "a1f1c8a0b73441658d22148cef086a766186b299ee74be4ab01a7249266fdd6c",
+          "stage": "r17-dcp1-fast-uma-budget"
+        },
         "model_executor/layers/sparse_attn_indexer.py": {
           "sha256": "113d85a97d7f4ef1047ebd2381e09b0a83bc7346f35bd2265100fabc9f3580fc",
           "stage": "r17-dcp2-v12l+dcp4-b4"
@@ -27,16 +31,32 @@
           "sha256": "c83ad34fa2477c425606effb6816621379029886c1fa81ea8bdcbe76ffd948ea",
           "stage": "r17-dcp2-late-dcp-bind"
         },
+        "utils/mem_utils.py": {
+          "sha256": "132a62eba1a633b8295acd48ecdf99bc3f982a78655ac6b6a5939365b47daf6b",
+          "stage": "r17-dcp1-fast-uma-budget"
+        },
         "v1/attention/backends/mla/sparse_utils.py": {
           "sha256": "7e1ca1c76b81c09f6198dd51e4649b4cd1ae0314311d1604464c3566ff624adf",
           "stage": "r17-dcp2-v3+dcp4"
+        },
+        "v1/worker/gpu_worker.py": {
+          "sha256": "654f08d0352fabc126d9515e838ba18d7190fd1f39edcc8655f52440913cef13",
+          "stage": "r17-dcp1-fast-uma-budget"
         }
       }
     },
-    "vllm_overlay_file_count": 74
+    "vllm_overlay_file_count": 77
   },
   "live_b4_reconciliation": {
-    "reason": "No live serving host or image was inspected for this publication batch.",
+    "container": "glm-prod-320k-b4-repaired-20260824T0425Z-rank0",
+    "image_id": "sha256:b2efd0fb2871d9d6aa31540a6b3aaddb6a96b7ee8e3e6f848a813b87e270d917",
+    "observed_at": "2026-08-24",
+    "observed_overlay_files": {
+      "envs.py": "a1f1c8a0b73441658d22148cef086a766186b299ee74be4ab01a7249266fdd6c",
+      "utils/mem_utils.py": "132a62eba1a633b8295acd48ecdf99bc3f982a78655ac6b6a5939365b47daf6b",
+      "v1/worker/gpu_worker.py": "654f08d0352fabc126d9515e838ba18d7190fd1f39edcc8655f52440913cef13"
+    },
+    "reason": "Three allocator overlay files were byte-reconciled from one operator-observed live champion container; complete live-image parity and a public live-service reproduction were not performed.",
     "status": "not-verified"
   },
   "public_source_inventory": {

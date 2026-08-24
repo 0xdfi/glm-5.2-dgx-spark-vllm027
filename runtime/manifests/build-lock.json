@@ -43,7 +43,7 @@
   },
   "manifests": {
     "native_source_sha256": "5a08643e09a686ba4ed8f4ae30fe129d3739ecbd2fefd7ba2c91502fe53df4ef",
-    "python_source_sha256": "d1127e10b6a4627ba9425f565d4a3e50b00ed5beb3f8cdfb788a963c0d2baa53"
+    "python_source_sha256": "f1d0382a3081f585db95b09387bb188213bf2c36bfc29f75c84c7f66fe7956b7"
   },
   "python": {
     "version": "3.12.3"

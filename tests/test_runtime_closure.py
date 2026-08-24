@@ -24,6 +24,9 @@ EXPECTED_LATER_CHAMPION_OVERLAYS = {
         ),
     },
     "vllm": {
+        "envs.py": (
+            "a1f1c8a0b73441658d22148cef086a766186b299ee74be4ab01a7249266fdd6c"
+        ),
         "model_executor/layers/sparse_attn_indexer.py": (
             "113d85a97d7f4ef1047ebd2381e09b0a83bc7346f35bd2265100fabc9f3580fc"
         ),
@@ -35,6 +38,12 @@ EXPECTED_LATER_CHAMPION_OVERLAYS = {
         ),
         "v1/attention/backends/mla/sparse_utils.py": (
             "7e1ca1c76b81c09f6198dd51e4649b4cd1ae0314311d1604464c3566ff624adf"
+        ),
+        "utils/mem_utils.py": (
+            "132a62eba1a633b8295acd48ecdf99bc3f982a78655ac6b6a5939365b47daf6b"
+        ),
+        "v1/worker/gpu_worker.py": (
+            "654f08d0352fabc126d9515e838ba18d7190fd1f39edcc8655f52440913cef13"
         ),
     },
 }
@@ -56,6 +65,23 @@ def test_exact_later_champion_sources_are_present_and_manifested():
             assert path.is_file(), f"missing later champion source: {relative}"
             assert hashlib.sha256(path.read_bytes()).hexdigest() == digest
             assert entries[relative]["sha256"] == digest
+
+
+def test_legacy_named_unified_allocator_setting_is_wired_as_live_floor_control():
+    envs = source("vllm", "envs.py")
+    mem_utils = source("vllm", "utils/mem_utils.py")
+    gpu_worker = source("vllm", "v1/worker/gpu_worker.py")
+    for text in (envs, mem_utils, gpu_worker):
+        ast.parse(text)
+
+    assert '"VLLM_UNIFIED_MEMORY_ALLOCATOR_BUDGET_BYTES"' in envs
+    assert "def compute_unified_memory_allocator_ceiling(" in mem_utils
+    assert "def apply_unified_memory_allocator_ceiling(" in mem_utils
+    assert (
+        "phase_budget_bytes=envs.VLLM_UNIFIED_MEMORY_ALLOCATOR_BUDGET_BYTES"
+        in gpu_worker
+    )
+    assert "set_per_process_memory_fraction" in gpu_worker
 
 
 @pytest.mark.parametrize(

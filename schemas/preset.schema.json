@@ -121,10 +121,10 @@
         "allocator": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["scope", "budget", "profile_drafter_cap"],
+          "required": ["scope", "floor", "profile_drafter_cap"],
           "properties": {
-            "scope": {"enum": ["none", "per-host"]},
-            "budget": {"enum": ["none", "computed"]},
+            "scope": {"enum": ["none", "per-host", "fleet-uniform"]},
+            "floor": {"enum": ["none", "computed"]},
             "profile_drafter_cap": {"type": "integer", "minimum": 0, "maximum": 1}
           }
         },

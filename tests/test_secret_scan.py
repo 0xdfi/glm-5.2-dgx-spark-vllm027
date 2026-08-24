@@ -80,6 +80,57 @@ def test_private_path_rfc1918_and_ssh_bearer_relay_are_rejected(tmp_path: Path):
     assert {"private-path", "private-network", "bearer-credential"} <= rules
 
 
+def test_image_scan_allows_only_the_canonical_shared_fleet_lock_path(
+    tmp_path: Path,
+):
+    bundle = tmp_path / "bundle"
+    bundle.mkdir()
+    canonical = "/home/dfi/.cache/nous-fleet-mutation.lock"
+    (bundle / "config.txt").write_text(f"CHAMPION_FLEET_LOCK={canonical}\n")
+    accepted_report = tmp_path / "accepted.json"
+
+    accepted = subprocess.run(
+        [
+            str(SCANNER),
+            "--mode",
+            "image",
+            "--root",
+            str(bundle),
+            "--report",
+            str(accepted_report),
+        ],
+        text=True,
+        capture_output=True,
+    )
+
+    assert accepted.returncode == 0, accepted.stdout + accepted.stderr
+    assert json.loads(accepted_report.read_text())["findings"] == []
+
+    rejected_private_path = "/" + "home" + "/dfi/.cache/other.lock"
+    (bundle / "config.txt").write_text(
+        f"CHAMPION_FLEET_LOCK={canonical}\nPRIVATE={rejected_private_path}\n"
+    )
+    rejected_report = tmp_path / "rejected.json"
+    rejected = subprocess.run(
+        [
+            str(SCANNER),
+            "--mode",
+            "image",
+            "--root",
+            str(bundle),
+            "--report",
+            str(rejected_report),
+        ],
+        text=True,
+        capture_output=True,
+    )
+
+    assert rejected.returncode != 0
+    assert {row["rule"] for row in json.loads(rejected_report.read_text())["findings"]} == {
+        "private-path"
+    }
+
+
 def test_exact_rfc1918_history_tuple_can_be_acknowledged(tmp_path: Path):
     repo = tmp_path / "repo"
     repo.mkdir()

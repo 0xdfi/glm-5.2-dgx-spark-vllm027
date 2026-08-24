@@ -10,9 +10,9 @@ The JSON files in [`presets/`](../presets/) are authoritative. This page is a na
 
 | Profile | DCP | Max length | KV bytes/rank | Seqs | Mnbt | DPTB | Graphs | Profile-only behavior |
 |---|---:|---:|---:|---:|---:|---:|---|---|
-| Fast 320K | 1 | 320000 | 10232320000 | 4 | 2048 | 1024 | 6,12,18,24 | boot unpinned; after readiness pin CPUs `5-9,15-19`, memory node `0`; rollback to CPUs `0-19`, memory node `0` |
+| Fast 320K | 1 | 320000 | 10232320000 | 4 | 2048 | 1024 | 6,12,18,24 | one-use approved idle compaction; fleet-uniform computed allocator floor and profile cap `1`; boot unpinned; after readiness pin CPUs `5-9,15-19`, memory node `0`; rollback to CPUs `0-19`, memory node `0` |
 | Balanced 650K | 2 | 650000 | 10395482112 | 4 | 2048 | 1024 | 6,12,18,24 | DCP `a2a`, KV interleave `1`, no CPU pin |
-| Large 1M | 4 | 1000000 | 7995534848 | 4 | 2048 | 1024 | 6,12,18,24 | DCP `a2a`, KV interleave `1`, per-host computed allocator, profile cap `1` |
+| Large 1M | 4 | 1000000 | 7995534848 | 4 | 2048 | 1024 | 6,12,18,24 | DCP `a2a`, KV interleave `1`, per-host computed allocator floor, profile cap `1` |
 
 All three use TP4/PP1/PCP1, FULL CUDA graphs, adaptive MTP depths `2,4,5` with maximum 5 and window 32, `nvfp4_ds_mla` KV, `B12X_MLA_SPARSE`, Marlin MoE, prefix caching, async scheduling, and the W8 sidecar requirement. `fuse_gemm_comms` is false.
 

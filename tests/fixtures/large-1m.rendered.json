@@ -121,6 +121,10 @@
       "1"
     ],
     [
+      "PYTORCH_CUDA_ALLOC_CONF",
+      "expandable_segments:True"
+    ],
+    [
       "RAY_DEDUP_LOGS",
       "0"
     ],
@@ -228,7 +232,7 @@
       "window": 32
     },
     "allocator": {
-      "budget": "computed",
+      "floor": "computed",
       "profile_drafter_cap": 1,
       "scope": "per-host"
     },

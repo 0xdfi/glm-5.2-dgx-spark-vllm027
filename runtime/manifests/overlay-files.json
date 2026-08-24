@@ -91,7 +91,7 @@
     "tree": "46e1d7837747c080d7300496abe9aa5f7c0e127d"
   },
   "vllm": {
-    "file_count": 74,
+    "file_count": 77,
     "files": [
       {
         "base_sha256": "9fb29a33a63cd625b42a0bf000d821bb371d5eefa24a2376525fc371155afd02",
@@ -218,6 +218,30 @@
         "path": "engine/arg_utils.py",
         "sha256": "4132ac6cd0eabf29dcf14d0c22decfb9d7595be5d78e2b112d5622fca88abf78",
         "target": "vllm/engine/arg_utils.py"
+      },
+      {
+        "base_sha256": "567c99293678739cdd133897e3c7edfeba3a7fc5c635c43b29aea6bb89251244",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "later_champion_source": {
+          "authority": "operator-observed-live-container",
+          "observation": {
+            "container": "glm-prod-320k-b4-repaired-20260824T0425Z-rank0",
+            "container_path": "/usr/local/lib/python3.12/dist-packages/vllm/envs.py",
+            "host_alias": "spark-nord",
+            "image_id": "sha256:b2efd0fb2871d9d6aa31540a6b3aaddb6a96b7ee8e3e6f848a813b87e270d917",
+            "observed_at": "2026-08-24"
+          },
+          "stage": "r17-dcp1-fast-uma-budget"
+        },
+        "path": "envs.py",
+        "sha256": "a1f1c8a0b73441658d22148cef086a766186b299ee74be4ab01a7249266fdd6c",
+        "target": "vllm/envs.py"
       },
       {
         "base_sha256": "272c01ff03e52cdfaed6fc7bc2e3e5f641d35910ea0bf5365b928c9401c4df5f",
@@ -483,6 +507,30 @@
         "target": "vllm/third_party/fmha_sm100/cute/src/sm100/prepare_k2q_csr.py"
       },
       {
+        "base_sha256": "c56776468121f217e205df157289bc90a2ea3719d3ce3d63c597efe3cfd66919",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "later_champion_source": {
+          "authority": "operator-observed-live-container",
+          "observation": {
+            "container": "glm-prod-320k-b4-repaired-20260824T0425Z-rank0",
+            "container_path": "/usr/local/lib/python3.12/dist-packages/vllm/utils/mem_utils.py",
+            "host_alias": "spark-nord",
+            "image_id": "sha256:b2efd0fb2871d9d6aa31540a6b3aaddb6a96b7ee8e3e6f848a813b87e270d917",
+            "observed_at": "2026-08-24"
+          },
+          "stage": "r17-dcp1-fast-uma-budget"
+        },
+        "path": "utils/mem_utils.py",
+        "sha256": "132a62eba1a633b8295acd48ecdf99bc3f982a78655ac6b6a5939365b47daf6b",
+        "target": "vllm/utils/mem_utils.py"
+      },
+      {
         "base_sha256": "4b439b2ba954e5b4d9d4f86f9a26135ab995ba7d71f74a4d9f1763168921b406",
         "classification": "modified",
         "donor": {
@@ -708,6 +756,30 @@
         "path": "v1/worker/gpu/warmup.py",
         "sha256": "915a9d7df0cbc5ca80cbfeb8af17f1040d43ace15340fd3138ce0376f831fb9f",
         "target": "vllm/v1/worker/gpu/warmup.py"
+      },
+      {
+        "base_sha256": "50134ca3a147f5470e556437cbd40a13ea05b098efbac6553d5ea2f3e5f7ff57",
+        "classification": "modified",
+        "donor": {
+          "commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+          "license": "Apache-2.0",
+          "name": "vLLM",
+          "repository": "https://github.com/vllm-project/vllm.git"
+        },
+        "later_champion_source": {
+          "authority": "operator-observed-live-container",
+          "observation": {
+            "container": "glm-prod-320k-b4-repaired-20260824T0425Z-rank0",
+            "container_path": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_worker.py",
+            "host_alias": "spark-nord",
+            "image_id": "sha256:b2efd0fb2871d9d6aa31540a6b3aaddb6a96b7ee8e3e6f848a813b87e270d917",
+            "observed_at": "2026-08-24"
+          },
+          "stage": "r17-dcp1-fast-uma-budget"
+        },
+        "path": "v1/worker/gpu_worker.py",
+        "sha256": "654f08d0352fabc126d9515e838ba18d7190fd1f39edcc8655f52440913cef13",
+        "target": "vllm/v1/worker/gpu_worker.py"
       },
       {
         "base_sha256": "5bd0302c4cd4cd2c3b7e8b1d01eb49d546475d06897678f5543ea2e0172aae84",

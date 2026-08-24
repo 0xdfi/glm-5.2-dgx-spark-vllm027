@@ -6,20 +6,77 @@ printf 'ssh %s %s\n' "$host" "$command_text" >>"${CHAMPION_FAKE_LOG:?}"
 scenario="${CHAMPION_FAKE_SCENARIO:-healthy}"
 image_id='sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 
+if [[ "$command_text" == *CHAMPION_FLEET_LOCK_PROTOCOL_V1* ]]; then
+  fake_lock="${CHAMPION_FAKE_REMOTE_LOCK:?}"
+  if ! mkdir "$fake_lock" 2>/dev/null; then
+    printf '%s\n' CHAMPION_FLEET_LOCK_BUSY >&2
+    exit 73
+  fi
+  # Invoked by name through the EXIT trap below.
+  # shellcheck disable=SC2329
+  release_fake_lock() {
+    rmdir "$fake_lock" 2>/dev/null || true
+    printf '%s\n' remote-lock-release >>"${CHAMPION_FAKE_LOG:?}"
+  }
+  trap release_fake_lock EXIT
+  printf '%s\n' remote-lock-acquired >>"${CHAMPION_FAKE_LOG:?}"
+  printf '%s\n' CHAMPION_FLEET_LOCK_READY
+  if [[ "$scenario" == lock-dies-after-ready ]]; then
+    exit 75
+  fi
+  cat >/dev/null
+  exit 0
+fi
+
+if [[ "$command_text" == *CHAMPION_COMPACTION_RECEIPT_V1* ]]; then
+  if [[ "$command_text" =~ receipt_hash=([0-9a-f]{64}) ]]; then
+    receipt_hash="${BASH_REMATCH[1]}"
+  else
+    exit 70
+  fi
+  receipt_root="${CHAMPION_FAKE_RECEIPT_DIR:?}"
+  mkdir -p "$receipt_root"
+  if ! mkdir "$receipt_root/$receipt_hash" 2>/dev/null; then
+    printf '%s\n' CHAMPION_COMPACTION_RECEIPT_REPLAY >&2
+    exit 74
+  fi
+  printf '%s\n' CHAMPION_COMPACTION_RECEIPT_CONSUMED
+  exit 0
+fi
+
 case "$command_text" in
-  'uname -m') printf '%s\n' aarch64 ;;
+  'uname -m')
+    if [[ "$scenario" == hold-preflight ]]; then
+      : >"${CHAMPION_FAKE_PREFLIGHT_WAITING:?}"
+      for _ in $(seq 1 1000); do
+        [[ -e "${CHAMPION_FAKE_PREFLIGHT_GATE:?}" ]] && break
+        sleep 0.01
+      done
+      [[ -e "${CHAMPION_FAKE_PREFLIGHT_GATE:?}" ]] || exit 76
+    fi
+    printf '%s\n' aarch64
+    ;;
   'getconf _NPROCESSORS_ONLN') printf '%s\n' 20 ;;
   *'nvidia-smi --query-gpu=name,compute_cap'*) printf '%s\n' 'NVIDIA GB10, 12.1' ;;
-  *'nvidia-smi --query-compute-apps'*) [[ "$scenario" == live-gpu ]] && printf '%s\n' 4242 ;;
-  *"awk /MemAvailable:"*|*"awk '/MemAvailable:"*)
-    # shellcheck disable=SC2016
-    if [[ "$command_text" == *'($2*1024)-6442450944'* ]]; then
-      printf '%s\n' 122406567936
-    elif [[ "$scenario" == low-memory ]]; then
-      printf '%s\n' 100000000
-    else
-      printf '%s\n' 125829120
+  *'nvidia-smi --query-compute-apps'*)
+    if [[ "$scenario" == gpu-query-error ]]; then
+      exit 17
+    elif [[ "$scenario" == live-gpu ]]; then
+      printf '%s\n' 4242
     fi
+    ;;
+  *'cat /proc/meminfo'*)
+    if [[ "$scenario" == low-memory ]]; then
+      available=100000000
+    else
+      case "$host" in
+        node-a) available=125829120 ;;
+        node-b) available=125960192 ;;
+        node-c) available=126091264 ;;
+        node-d) available=126222336 ;;
+      esac
+    fi
+    printf 'MemAvailable: %s kB\nSwapTotal: 8388608 kB\nSwapFree: 7340032 kB\n' "$available"
     ;;
   *'ps -C polkitd -o rss='*) printf '%s\n' 64000 ;;
   *"awk /SwapTotal:"*|*"awk '/SwapTotal:"*) printf '%s\n' 1048576 ;;
@@ -28,9 +85,28 @@ case "$command_text" in
     printf '%s\n' '# CPU,MAXMHZ,NODE'
     for cpu in $(seq 0 19); do printf '%s,4000.0000,0\n' "$cpu"; done
     ;;
-  *'ss -ltnH'*) [[ "$scenario" == busy-port ]] && printf '%s\n' 'LISTEN 0 128 *:8211' ;;
-  *'docker ps -a --filter'*) ;;
-  *"docker ps --format"*) [[ "$scenario" == protected ]] && printf '%s\n' protected-production ;;
+  *'ss -ltnH'*)
+    if [[ "$scenario" == port-query-error ]]; then
+      exit 18
+    elif [[ "$scenario" == busy-port ]]; then
+      printf '%s\n' 'LISTEN 0 128 *:8211'
+    fi
+    ;;
+  *'docker ps -a --filter'*)
+    if [[ "$scenario" == existing-target ]]; then
+      printf '%s\n' fixture-run-rank0
+    fi
+    ;;
+  *"docker ps --format"*)
+    if [[ "$scenario" == protected-query-error ]]; then
+      exit 19
+    elif [[ "$scenario" == protected ]]; then
+      printf '%s\n' protected-production
+    elif [[ "$scenario" == protected-grep-error ]]; then
+      printf '%s\n' ordinary-container
+    fi
+    ;;
+  *'docker image inspect '*'org.0xdfi.champion.build_subject_id'*) printf '%s\n' fixture-build-subject ;;
   *'docker image inspect'*) printf '%s\n' "$image_id" ;;
   *'sha256sum '*shard-000.fixture*) printf '%s  %s\n' de3b138aa085f01bd5f297f6bafe383f3329a144aa1f23b6bff6f265f898d9b0 "${command_text##* }" ;;
   *'sha256sum '*shard-001.fixture*) printf '%s  %s\n' 7a868a62f2f954275db963f7a505ffa3e9fe906d05106db32873a1b3220d62d2 "${command_text##* }" ;;
@@ -41,6 +117,30 @@ case "$command_text" in
     else printf '%s|fixture-run|true\n' "$image_id"; fi
     ;;
   *'docker inspect '*'{{.State.Running}}|{{.State.OOMKilled}}|{{.RestartCount}}'*) printf '%s\n' 'true|false|0' ;;
+  *'docker inspect '*'{{range .Config.Env}}'*)
+    printf '%s\n' 'PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True'
+    case "${CHAMPION_FAKE_PROFILE:-fast}" in
+      fast|fast-320k)
+        if [[ "$scenario" == allocator-readback-mismatch && "$host" == node-c ]]; then
+          printf '%s\n' 'VLLM_UNIFIED_MEMORY_ALLOCATOR_BUDGET_BYTES=122406567935'
+        else
+          printf '%s\n' 'VLLM_UNIFIED_MEMORY_ALLOCATOR_BUDGET_BYTES=122406567936'
+        fi
+        printf '%s\n' 'VLLM_R17_PROFILE_DRAFTER_CAP=1'
+        ;;
+      large|large-1m)
+        case "$host" in
+          node-a) budget=122406567936 ;;
+          node-b) budget=122540785664 ;;
+          node-c) budget=122675003392 ;;
+          node-d) budget=122809221120 ;;
+        esac
+        printf 'VLLM_UNIFIED_MEMORY_ALLOCATOR_BUDGET_BYTES=%s\n' "$budget"
+        printf '%s\n' 'VLLM_R17_PROFILE_DRAFTER_CAP=1'
+        ;;
+    esac
+    printf 'allocator-env-readback %s\n' "$host" >>"${CHAMPION_FAKE_LOG:?}"
+    ;;
   *'docker inspect '*'{{.HostConfig.CpusetCpus}}|'*) printf '%s\n' '5-9,15-19|0' ;;
   *'docker update --cpuset-cpus 5-9,15-19'*) [[ "$scenario" != pin-fail ]] ;;
   *'docker update --cpuset-cpus 0-19'*) ;;

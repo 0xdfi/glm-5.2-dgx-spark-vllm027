@@ -29,3 +29,13 @@ Within a DCP degree, additional KV was much cheaper than changing DCP degree. DC
 Temperature zero did not guarantee byte-identical output in the historical campaign. Atomic reductions, batching/scheduling, and speculative paths remain plausible sources. The current battery starts with an exact determinism triplet and retains divergence evidence, but a spot check is diagnostic rather than a bit-reproducibility claim.
 
 Bit reproducibility has its own blocked publication row and requires two distinct trusted clean builds plus normalized comparison evidence. It cannot be inferred from temperature-zero generation.
+
+## Fast recovery-path allocator incident
+
+On 2026-08-24, a historical Fast production run stopped completing inference even though its HTTP health endpoint, model listing, four containers, and Ray membership remained healthy. Rank 0 repeatedly reported that no shared-memory broadcast block became available. The process checks were therefore false reassurance rather than proof of semantic liveness.
+
+The deterministic trigger was a prompt crossing the 2,048-token chunk boundary in the DCP1 B12X sparse indexer. At 320K context, two simultaneous fold buffers were 320 MiB each. The weakest ranks lacked the explicit unified-memory floor on the recovery path and missed the transient requirement by a small margin. Propagating expandable PyTorch segments to every rank was necessary but did not repair the incident by itself.
+
+The accepted historical repair restored a single fleet floor derived from the weakest post-compaction host, less 4 GiB and a further 2 GiB operator deduction. That second deduction was not a guaranteed free-memory reserve. The live receipts on every rank recorded floor/requested/applied `119605592064` bytes. Rank 0 recorded availability `18183303168`, baseline `104014544896`, and conservative allowance `117902880768`, so the explicit floor won; total-minus-4 GiB remained the hard cap. The exact 320K model length and `10232320000` KV bytes per rank were unchanged. A cache-busted 4,119-token completion exercised the former failure path, followed by a five-minute soak and another semantic completion.
+
+The portable Fast contract now encodes that allocator formula, pre-Ray environment propagation and readback, and the greater-than-2,048-token semantic readiness gate. These historical observations do not constitute a fresh public-source reproduction.

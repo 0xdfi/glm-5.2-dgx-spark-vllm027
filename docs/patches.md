@@ -1,11 +1,12 @@
 # Runtime source and patch closure
 
-The source release is rooted at public O14 commit `9ba54db8f7c852eabb90372f7dcf47f87eafbe20`, tree `46e1d7837747c080d7300496abe9aa5f7c0e127d`. [o14-import.json](../runtime/manifests/o14-import.json) records the public inventory; [overlay-files.json](../runtime/manifests/overlay-files.json) records the effective champion selection. No serving host or live image was inspected during this publication, so live-b4 parity remains `not-verified`.
+The source release is rooted at public O14 commit `9ba54db8f7c852eabb90372f7dcf47f87eafbe20`, tree `46e1d7837747c080d7300496abe9aa5f7c0e127d`. [o14-import.json](../runtime/manifests/o14-import.json) records the public inventory; [overlay-files.json](../runtime/manifests/overlay-files.json) records the effective champion selection. Three allocator-related vLLM derivatives were byte-reconciled from one operator-observed 2026-08-24 live champion container. That limited source observation is not complete live-image parity or a public live-service reproduction, so live-b4 parity remains `not-verified`.
 
 ## Effective source selection
 
-- 74 effective vLLM overlay files: the public O14 selection plus the sealed
-  DCP2/DCP4 caller and global-top-k updates from the later champion lineage.
+- 77 effective vLLM overlay files: the public O14 selection, the sealed
+  DCP2/DCP4 caller and global-top-k updates from the later champion lineage,
+  and three exact operator-observed allocator-control derivatives.
 - 5 effective B12X overlay files: the 3 public O14 files plus the sealed
   caller-owned two-level fold scratch repair used by the later champion.
 - All 5 B12X overlay files are derived from B12X commit
@@ -14,7 +15,7 @@ The source release is rooted at public O14 commit `9ba54db8f7c852eabb90372f7dcf4
 - Build A v0 at SHA-256 `965b6aeaf3a0c41abefec89a31592f6b8061a053053831be7c5e6f7560857515`.
 - Build A v1 excluded from the effective runtime.
 
-The imported vLLM closure covers configuration and argument plumbing, DCP groups and global top-k ownership exchange, sparse MLA/indexer paths, compact NVFP4 cache layout and attention, Marlin MoE, adaptive MTP and packed mapping, lm-head rescoring, scheduling, graph capture/warmup, and the donor FlashAttention/MSA/FlashMLA files. The B12X closure carries tiled top-k, compiler, and sparse-MLA scratch changes. The native patch carries the SM121 cache/operator and build integration needed by the Python overlay.
+The imported vLLM closure covers configuration and argument plumbing, the legacy-named unified-memory byte setting parser and GPU-worker allocator-floor wiring, DCP groups and global top-k ownership exchange, sparse MLA/indexer paths, compact NVFP4 cache layout and attention, Marlin MoE, adaptive MTP and packed mapping, lm-head rescoring, scheduling, graph capture/warmup, and the donor FlashAttention/MSA/FlashMLA files. The B12X closure carries tiled top-k, compiler, and sparse-MLA scratch changes. The native patch carries the SM121 cache/operator and build integration needed by the Python overlay.
 
 ## Provenance and verification
 

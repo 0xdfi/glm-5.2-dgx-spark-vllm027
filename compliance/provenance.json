@@ -102,7 +102,7 @@
       "origin_path": "text/Apache-2.0.txt",
       "origin_repository": "https://github.com/spdx/license-list-data",
       "path": "LICENSE",
-      "target_sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff"
+      "target_sha256": "2f0622029b07acda2edc2f2230ce7c0c9479eeeca2f74d710049d8b2ad420c0d"
     },
     {
       "base_sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff",
@@ -180,7 +180,7 @@
       "origin_path": "README.md",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "README.md",
-      "target_sha256": "c1eb838da13b92cac50747a9090710808cd2609cc068b7f9251c7403dca7d07b"
+      "target_sha256": "c16a63fd899aca23ee40bd43c7bf4d9b40066e51f7680bcabbaa5ee384609cdb"
     },
     {
       "base_sha256": null,
@@ -245,7 +245,7 @@
       "origin_path": "bin/champion",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "bin/champion",
-      "target_sha256": "2acd13473479513956cac8006f0763ab93d85f7c6b0282ffbe1bbeef85ca16ba"
+      "target_sha256": "a44585aa964389b4100efb3bec7fa244540206249e9bdfaea54c4c98742f2232"
     },
     {
       "base_sha256": "13660a5d7a74f832194d4e801ac188667a7152b73397ca2f510b5e1afd7c91b3",
@@ -297,7 +297,7 @@
       "origin_path": "cluster.env.example",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "cluster.env.example",
-      "target_sha256": "7bdac480c99aaecc7d87bca822157916cd3299d87c5b9e410e2a989299462201"
+      "target_sha256": "98e0bca69909e1442bbb8a2074aab2f367c6a59d6d43cdde9f33073fff8185c9"
     },
     {
       "base_sha256": null,
@@ -401,7 +401,7 @@
       "origin_path": "docs/findings.md",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "docs/findings.md",
-      "target_sha256": "244d2af7209907275cfe2dd528cb6cbeae2a9a9f2f492cedd671372f05914bde"
+      "target_sha256": "454ca0193084986b9d5f5bf41fc698c69e16d09d6482cc84ca10f069640350cb"
     },
     {
       "base_sha256": "b3425210ae544612b37808e73a7d8aee9570b444ea1ee85ea4ab1414b2c0c445",
@@ -414,7 +414,7 @@
       "origin_path": "docs/how-it-works.md",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "docs/how-it-works.md",
-      "target_sha256": "3337af3efdd366b908165164b3c9f917524be85f4b5d0b366f9a913c308c4068"
+      "target_sha256": "56355da93bc37469da904905e3bb0a9364bece10c1d8a22a7a4f728d59b4776d"
     },
     {
       "base_sha256": "e3aced7154cf23b99df182a54185175b612a369f41ed45bd7f757fbc623d47e5",
@@ -453,7 +453,7 @@
       "origin_path": "docs/operations.md",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "docs/operations.md",
-      "target_sha256": "e4a03462a7216cf3ab5591d98c3afbfeb87179cb5ec21dac9e17a0404771d215"
+      "target_sha256": "81cf126d02d3a8b7ea68dd133495989216bcffc70cbadb660baf73ab1f645120"
     },
     {
       "base_sha256": "3b66d38d2356e8a87a347aa788512de6fbe0d5b40a7cbcd239a81e70e11651e1",
@@ -466,7 +466,7 @@
       "origin_path": "docs/patches.md",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "docs/patches.md",
-      "target_sha256": "5e0824f689a566498a74b4b890a1bcbde62e3e38b99b24b0f0e623b4e630add6"
+      "target_sha256": "1c97a4bcf080b8f00747be9d6ab7b9df78541393b5dbc0d72ddc2a5e4b503ee7"
     },
     {
       "base_sha256": null,
@@ -531,7 +531,7 @@
       "origin_path": "presets/balanced-650k.json",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "presets/balanced-650k.json",
-      "target_sha256": "118fc1e17ce61cc26d1e3a7dac034a69bbbbb9d2f6e507bd133343f748b29e15"
+      "target_sha256": "476f10a5820bde36be59a2f5795ebd5d84672c031c6e9ed5888bfb255c5f95d2"
     },
     {
       "base_sha256": null,
@@ -544,7 +544,7 @@
       "origin_path": "presets/common.json",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "presets/common.json",
-      "target_sha256": "e0c1742b95723ae434f5544d31247d109a87800fe86767c6da25883c90514b8c"
+      "target_sha256": "4d3d15e07db9ab7a28a9315d76b2ba39571db7f14868b82c6ecc46c631733c87"
     },
     {
       "base_sha256": null,
@@ -557,7 +557,7 @@
       "origin_path": "presets/fast-320k.json",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "presets/fast-320k.json",
-      "target_sha256": "1d481b98b0e00c1e26f9fee599e7063847504366a6487850c605ae60990df807"
+      "target_sha256": "4f602bd9f9e966b1f2cbf1f0145c273299e6db1e68e22056e9b930dd03fde63e"
     },
     {
       "base_sha256": null,
@@ -570,7 +570,7 @@
       "origin_path": "presets/large-1m.json",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "presets/large-1m.json",
-      "target_sha256": "00e52d27f48bed3bd72e5afde7e52c143fba367a77fdd5404c84b84bf1a5b8be"
+      "target_sha256": "a05feaf257ec3ba9d928d29c25ea180246dc063a1c58a2e4dabb74cbf3b7982d"
     },
     {
       "base_sha256": null,
@@ -635,7 +635,7 @@
       "origin_path": "recipes/presets.md",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "recipes/presets.md",
-      "target_sha256": "bd518f2bd9b35b4284cd9091676e8b70927a2a457f47c22ebbd6a7872a975819"
+      "target_sha256": "84fde78ef93da5ea5d250f199d8a3c898280c3ac59c3dce7cab65059600d2f47"
     },
     {
       "base_sha256": "a2fa226ac021496172b357045bf5f6d829e9ba089acf5e88d2a6020b7f6e0176",
@@ -674,7 +674,7 @@
       "origin_path": "runtime/manifests/build-lock.json",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "runtime/manifests/build-lock.json",
-      "target_sha256": "ad7160beda206abc84115f6f74e92eb454e29268ad60e18d051c7d6c2b6624b2"
+      "target_sha256": "393df6a175c78dd56e4178c942dcd78dbbdc0fb95b03d0d7dce4123b81a520d8"
     },
     {
       "base_sha256": null,
@@ -713,7 +713,7 @@
       "origin_path": "runtime/manifests/o14-import.json",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "runtime/manifests/o14-import.json",
-      "target_sha256": "ca7e5523ef265ee0d841d206128fe4a6980b0aaf4e5de27e964bd64365495e22"
+      "target_sha256": "f34ef9c6d998ff75e922b98cfaf78f41477b73d7298d218b3499b1a8af898ec0"
     },
     {
       "base_sha256": null,
@@ -726,7 +726,7 @@
       "origin_path": "runtime/manifests/overlay-files.json",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "runtime/manifests/overlay-files.json",
-      "target_sha256": "d1127e10b6a4627ba9425f565d4a3e50b00ed5beb3f8cdfb788a963c0d2baa53"
+      "target_sha256": "f1d0382a3081f585db95b09387bb188213bf2c36bfc29f75c84c7f66fe7956b7"
     },
     {
       "base_sha256": null,
@@ -922,6 +922,19 @@
       "origin_repository": "https://github.com/0xdfi/GLM-5.2-Harness-O14-4x-DGX-Spark.git",
       "path": "runtime/overlays/vllm/vllm/engine/arg_utils.py",
       "target_sha256": "4132ac6cd0eabf29dcf14d0c22decfb9d7595be5d78e2b112d5622fca88abf78"
+    },
+    {
+      "base_sha256": "567c99293678739cdd133897e3c7edfeba3a7fc5c635c43b29aea6bb89251244",
+      "classification": "upstream-derivative",
+      "copyright": "Copyright contributors to the vLLM project",
+      "evidence": [],
+      "license": "Apache-2.0",
+      "modified_by": "dfi / 0xdfi",
+      "origin_commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+      "origin_path": "vllm/envs.py",
+      "origin_repository": "https://github.com/vllm-project/vllm.git",
+      "path": "runtime/overlays/vllm/vllm/envs.py",
+      "target_sha256": "a1f1c8a0b73441658d22148cef086a766186b299ee74be4ab01a7249266fdd6c"
     },
     {
       "base_sha256": "832ca14c86ed08787ff44f0a2fe11b171212e5d39a027423ffd109bdc380cdb3",
@@ -1158,6 +1171,19 @@
       "target_sha256": "429ab94135902eec524ec8a0db31857aa51b067c525330b2009412384601199f"
     },
     {
+      "base_sha256": "c56776468121f217e205df157289bc90a2ea3719d3ce3d63c597efe3cfd66919",
+      "classification": "upstream-derivative",
+      "copyright": "Copyright contributors to the vLLM project",
+      "evidence": [],
+      "license": "Apache-2.0",
+      "modified_by": "dfi / 0xdfi",
+      "origin_commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+      "origin_path": "vllm/utils/mem_utils.py",
+      "origin_repository": "https://github.com/vllm-project/vllm.git",
+      "path": "runtime/overlays/vllm/vllm/utils/mem_utils.py",
+      "target_sha256": "132a62eba1a633b8295acd48ecdf99bc3f982a78655ac6b6a5939365b47daf6b"
+    },
+    {
       "base_sha256": "217b3645c88bd43c4701875b9b47420df9e90dedab13e869e86e3a18124d2a7f",
       "classification": "upstream-derivative",
       "copyright": "Copyright contributors to the vLLM project",
@@ -1364,6 +1390,19 @@
       "origin_repository": "https://github.com/0xdfi/GLM-5.2-Harness-O14-4x-DGX-Spark.git",
       "path": "runtime/overlays/vllm/vllm/v1/worker/gpu/warmup.py",
       "target_sha256": "915a9d7df0cbc5ca80cbfeb8af17f1040d43ace15340fd3138ce0376f831fb9f"
+    },
+    {
+      "base_sha256": "50134ca3a147f5470e556437cbd40a13ea05b098efbac6553d5ea2f3e5f7ff57",
+      "classification": "upstream-derivative",
+      "copyright": "Copyright contributors to the vLLM project",
+      "evidence": [],
+      "license": "Apache-2.0",
+      "modified_by": "dfi / 0xdfi",
+      "origin_commit": "6e448d0ea9bf3d88d898b65449ca6dc2aec170ac",
+      "origin_path": "vllm/v1/worker/gpu_worker.py",
+      "origin_repository": "https://github.com/vllm-project/vllm.git",
+      "path": "runtime/overlays/vllm/vllm/v1/worker/gpu_worker.py",
+      "target_sha256": "654f08d0352fabc126d9515e838ba18d7190fd1f39edcc8655f52440913cef13"
     },
     {
       "base_sha256": "a655fbaccd3d23de2cacca6e8a7ae7782aa4ee3200cea94f9c73585f2ffe50cc",
@@ -1818,7 +1857,7 @@
       "origin_path": "runtime/tests/test_runtime_overlays.py",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "runtime/tests/test_runtime_overlays.py",
-      "target_sha256": "cdfb8c1b1b49c05bb69ade93acdbd88d8093144a09c24b60e6f0036921ac223d"
+      "target_sha256": "640188479770967704defd068c99f5a0a73aac4f80651d0fa9cc166401ddb75d"
     },
     {
       "base_sha256": null,
@@ -1857,7 +1896,7 @@
       "origin_path": "schemas/preset.schema.json",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "schemas/preset.schema.json",
-      "target_sha256": "ac03b13d361313cc6e845c843f348ee60946ce11b0a3a8646581d451bab99df2"
+      "target_sha256": "5ec168eaaf8dccf4da20f66c2f0faa7361b4e762ca91aed9de9bd517ae6f1619"
     },
     {
       "base_sha256": "fc2c0d9cc23c48a7dec8f46fc8a2ca793e6de568b9ca7d0a07f8fa00609cecf3",
@@ -2065,7 +2104,7 @@
       "origin_path": "scripts/launch_cluster.sh",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "scripts/launch_cluster.sh",
-      "target_sha256": "d83d1de0ff56db9537ea8ef7f5f92633428769229cc3a798fb203c240d8d988b"
+      "target_sha256": "814249998551a616ae4841ef69525c1b268886022ff90fcaa546d6772d26708f"
     },
     {
       "base_sha256": null,
@@ -2078,7 +2117,7 @@
       "origin_path": "scripts/lib/fleet.sh",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "scripts/lib/fleet.sh",
-      "target_sha256": "925fe8fefa5618056aac4baf5b86af386aa717612b664988fa53c730c97c4ddd"
+      "target_sha256": "5333865199023eafef827eaf3b98225f40e86aae9d6049aac9a8ca9113b394e0"
     },
     {
       "base_sha256": null,
@@ -2117,7 +2156,7 @@
       "origin_path": "scripts/render_launch.py",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "scripts/render_launch.py",
-      "target_sha256": "f712e87208109ff6fbb3e342601a284eb76b7928e85d293703c031cd600bf973"
+      "target_sha256": "5a10922d38d4aff61ac4c608c77ed53a71d06392386e2e7548306543708aef5c"
     },
     {
       "base_sha256": null,
@@ -2156,7 +2195,7 @@
       "origin_path": "scripts/scan_secrets.sh",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "scripts/scan_secrets.sh",
-      "target_sha256": "2dab4a060bd15423fde5c3c54ba60cd923a3f83c5bd46f61ebb6cd477ae2d56d"
+      "target_sha256": "c998a6695d2dd094d97a1771ef10cabd26d20e4e08e1066647f3404df5868af7"
     },
     {
       "base_sha256": null,
@@ -2169,7 +2208,7 @@
       "origin_path": "scripts/stage_image.sh",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "scripts/stage_image.sh",
-      "target_sha256": "ae96a5e189fe1debb6db56b1ce99ca2660dec5fa2be47820ed560817e18c7d00"
+      "target_sha256": "7da41fe1c0cb8bd7f80cdd6c3f8e205411884c51a5aee95531d1a0bd28b93244"
     },
     {
       "base_sha256": null,
@@ -2312,7 +2351,7 @@
       "origin_path": "tests/fixtures/balanced-650k.rendered.json",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/fixtures/balanced-650k.rendered.json",
-      "target_sha256": "061a3e0d999ba3d655d45f71e239e0ab56c466802d5c39237526b8ea14444d3f"
+      "target_sha256": "715bbb671533963f37bab472c61779bcc0b6cbe28ec3be13c8e77f52726be3d5"
     },
     {
       "base_sha256": null,
@@ -2325,7 +2364,7 @@
       "origin_path": "tests/fixtures/bin/curl",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/fixtures/bin/curl",
-      "target_sha256": "c54f7f8dc04cb81b094194d31715b4e502fe6f784fcc10b42ecb63b216e75b65"
+      "target_sha256": "a05ca33611b9254fda73ed41c07127117c28bac76690c84ef06d5c1c04a08803"
     },
     {
       "base_sha256": null,
@@ -2364,7 +2403,7 @@
       "origin_path": "tests/fixtures/bin/ssh",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/fixtures/bin/ssh",
-      "target_sha256": "387d6083dcd9281367dcf2f468a38de5f7e9d401fd0001542d175f30d0983e7c"
+      "target_sha256": "ac904fc6972d6d8d6dc981c5da9317c37b300e1a3e4deb84819ab31310510101"
     },
     {
       "base_sha256": null,
@@ -2390,7 +2429,7 @@
       "origin_path": "tests/fixtures/fast-320k.rendered.json",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/fixtures/fast-320k.rendered.json",
-      "target_sha256": "e8bb6b294136020897cffd0d04b558e31b2c86240ba57935f43c9c3949bf59e5"
+      "target_sha256": "e881707518b48384079769370245e70b8a42e6d6e13172cc635fabcf9f138e8f"
     },
     {
       "base_sha256": null,
@@ -2403,7 +2442,7 @@
       "origin_path": "tests/fixtures/large-1m.rendered.json",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/fixtures/large-1m.rendered.json",
-      "target_sha256": "fc040e556ab0f105feb485ed06f34f5d5cea527be3df5eeaaf018f9b9d09550b"
+      "target_sha256": "497cba26fce77cac9187b07f39b313d85b86d260a4ef2455c8a86de8e84d08f0"
     },
     {
       "base_sha256": null,
@@ -2572,7 +2611,7 @@
       "origin_path": "tests/test_docs.py",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/test_docs.py",
-      "target_sha256": "d49a1504d1d9a6ea3b8bce27d9a003eb6126a70c49d7aeded7d33553bd38cead"
+      "target_sha256": "f7199490713c3c6cdade44fa42b2078d2700570981e1128160000d00d1254f0f"
     },
     {
       "base_sha256": null,
@@ -2624,7 +2663,7 @@
       "origin_path": "tests/test_launcher.py",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/test_launcher.py",
-      "target_sha256": "a48e02fc357a53570f2c6d9c2db3d18fe9e4d3386c42e80ed4b6c5aade24e75f"
+      "target_sha256": "cf190b6503f21f0b8d9b3362940dfbccc2a67fd831d27e51d65c6fedd6750e1a"
     },
     {
       "base_sha256": null,
@@ -2663,7 +2702,7 @@
       "origin_path": "tests/test_presets.py",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/test_presets.py",
-      "target_sha256": "5f7dd97123064d722546d05b24c2e5cbb6393f3f026eacb2ef4adf3da6eb805a"
+      "target_sha256": "b526e03f703059911562786eb30b5e71fcb14b49c085fb8d859a2c7db1768e06"
     },
     {
       "base_sha256": null,
@@ -2702,7 +2741,7 @@
       "origin_path": "tests/test_runtime_closure.py",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/test_runtime_closure.py",
-      "target_sha256": "b3aeb4e38155100c1b988471c81f393b9b5bd52987bf08993616a695fa91f406"
+      "target_sha256": "bf714ba853752155fea35ac2d3e61a2b2bde0ce467b98b253df4c7496cc7fbe1"
     },
     {
       "base_sha256": null,
@@ -2715,7 +2754,7 @@
       "origin_path": "tests/test_runtime_import.py",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/test_runtime_import.py",
-      "target_sha256": "9dd477e74b744bc42b2042543129390ee75a1bd0b422d9a5bef56dd2c32aa9f0"
+      "target_sha256": "5ee11d2e4c2c5af72c9528616b48f34f581ea7f13f21ac74aa7bf9f313e1b990"
     },
     {
       "base_sha256": null,
@@ -2728,7 +2767,7 @@
       "origin_path": "tests/test_secret_scan.py",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tests/test_secret_scan.py",
-      "target_sha256": "f882e5a6085cbf82b410e2e501b4f3dbd0a63e386d65cfe91a617e7935a8e560"
+      "target_sha256": "b2d6face97230939a7809388133d098d8b42b0292e096c41ad5b918c45764168"
     },
     {
       "base_sha256": null,
@@ -2819,7 +2858,7 @@
       "origin_path": "tools/import_runtime.py",
       "origin_repository": "https://github.com/0xdfi/glm-5.2-dgx-spark-vllm027.git",
       "path": "tools/import_runtime.py",
-      "target_sha256": "a23d4d95fe8a73a09049d0606f75a9b55079cdaf02aaaac964393ca301705284"
+      "target_sha256": "c5727da8676be8ec40532d01dfebb7ca6ca7c2108b9faa80a9891cb62cf61713"
     }
   ],
   "schema_version": "1.0.0"

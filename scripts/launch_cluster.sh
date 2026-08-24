@@ -11,8 +11,58 @@ source "$CHAMPION_ROOT/scripts/lib/fleet.sh"
 
 MODE="${1:-launch}"
 PROFILE="${2:-fast}"
+if (( $# >= 2 )); then shift 2; else set --; fi
 STARTED=0
 READINESS_PASSED=0
+CHAMPION_COMPACTION_NONCE_HASH=''
+CHAMPION_COMPACTION_RUN_HASH=''
+
+parse_launch_authorization() {
+  local nonce=''
+  if [[ "$MODE" != launch ]]; then
+    (( $# == 0 )) || { printf '%s\n' 'verify-hosts accepts no authorization arguments' >&2; exit 64; }
+    return 0
+  fi
+  while (( $# > 0 )); do
+    case "$1" in
+      --compaction-nonce)
+        [[ -z "$nonce" && $# -ge 2 ]] || {
+          printf '%s\n' 'launch: --compaction-nonce must appear exactly once with a value' >&2
+          exit 64
+        }
+        nonce="$2"
+        shift 2
+        ;;
+      *) printf 'launch: unknown argument: %s\n' "$1" >&2; exit 64 ;;
+    esac
+  done
+  case "$PROFILE" in
+    fast|fast-320k)
+      [[ -n "$nonce" ]] || {
+        printf '%s\n' 'launch fast requires --compaction-nonce with a fresh 32 hexadecimal character value' >&2
+        exit 64
+      }
+      [[ "$nonce" =~ ^[0-9A-Fa-f]{32}$ ]] || {
+        printf '%s\n' 'launch: --compaction-nonce must be exactly 32 hexadecimal characters' >&2
+        exit 64
+      }
+      CHAMPION_COMPACTION_NONCE_HASH="$(printf '%s' "$nonce" | "$CHAMPION_PYTHON" -c '
+import hashlib,sys
+raw=sys.stdin.buffer.read()
+print(hashlib.sha256(b"champion-fast-compaction-v1\\0" + raw).hexdigest())
+')" || exit 70
+      nonce=''
+      ;;
+    *)
+      [[ -z "$nonce" ]] || {
+        printf '%s\n' 'launch: --compaction-nonce is valid only for Fast' >&2
+        exit 64
+      }
+      ;;
+  esac
+}
+
+parse_launch_authorization "$@"
 
 on_exit() {
   local rc=$?
@@ -31,11 +81,31 @@ on_exit() {
 trap on_exit EXIT
 
 fleet_load_cluster
+fleet_validate_protected_pattern
+if [[ -n "$CHAMPION_COMPACTION_NONCE_HASH" ]]; then
+  CHAMPION_COMPACTION_RUN_HASH="$(printf '%s' "$CHAMPION_RUN_ID" | "$CHAMPION_PYTHON" -c '
+import hashlib,sys
+print(hashlib.sha256(b"champion-run-v1\\0" + sys.stdin.buffer.read()).hexdigest())
+')" || exit 70
+fi
+
+read_mem_available_kib() {
+  fleet_remote "$1" cat /proc/meminfo | awk '/MemAvailable:/ {print $2}'
+}
+
+read_swap_used_kib() {
+  fleet_remote "$1" cat /proc/meminfo | awk '
+    /SwapTotal:/ {total=$2}
+    /SwapFree:/ {free=$2}
+    END {print total-free}
+  '
+}
 
 verify_hosts() {
-  local index host arch cpus gpu_line gpu capability mem polkit swap apps busy protected image
+  local memory_policy="${1:-strict}" index host arch cpus gpu_line gpu capability mem polkit swap apps busy protected containers image protected_rc
   local min_mem=999999999 max_mem=0 reports=()
   for index in 0 1 2 3; do
+    if [[ "$MODE" == launch ]]; then fleet_lock_assert_held || return; fi
     host="${CHAMPION_HOST_ARRAY[$index]}"
     arch="$(fleet_remote "$host" uname -m)"
     [[ "$arch" == aarch64 ]] || fleet_die "$host architecture is $arch, expected aarch64" || return
@@ -52,30 +122,53 @@ verify_hosts() {
     fleet_remote "$host" test -c "$CHAMPION_RDMA_CM" || fleet_die "$host rdma_cm device missing" || return
     fleet_remote "$host" rdma link show "$CHAMPION_IB_HCA/1" | grep -q 'state ACTIVE.*physical_state LINK_UP' || \
       fleet_die "$host RDMA link is not active" || return
-    # shellcheck disable=SC2016
-    mem="$(fleet_remote "$host" awk '/MemAvailable:/ {print $2}' /proc/meminfo)"
-    [[ "$mem" =~ ^[0-9]+$ && "$mem" -ge 121634816 ]] || \
-      fleet_die "$host MemAvailable ${mem:-unknown} KiB is below 116 GiB" || return
+    mem="$(read_mem_available_kib "$host")"
+    [[ "$mem" =~ ^[1-9][0-9]{0,11}$ ]] || \
+      fleet_die "$host MemAvailable is invalid: ${mem:-unknown}" || return
+    if [[ "$memory_policy" == strict && "$mem" -lt 121634816 ]]; then
+      fleet_die "$host MemAvailable $mem KiB is below 116 GiB" || return
+    fi
     (( mem < min_mem )) && min_mem=$mem
     (( mem > max_mem )) && max_mem=$mem
     polkit="$(fleet_remote "$host" ps -C polkitd -o rss= | awk 'NR==1 {print $1+0}')"
     [[ "$polkit" =~ ^[0-9]+$ && "$polkit" -lt 131072 ]] || fleet_die "$host polkit RSS exceeds 128 MiB" || return
-    # shellcheck disable=SC2016
-    swap="$(fleet_remote "$host" awk '/SwapTotal:/ {t=$2} /SwapFree:/ {f=$2} END {print t-f}' /proc/meminfo)"
+    swap="$(read_swap_used_kib "$host")"
     [[ "$swap" =~ ^[0-9]+$ && "$swap" -le 6291456 ]] || fleet_die "$host swap use exceeds 6 GiB" || return
-    apps="$(fleet_remote "$host" nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits || true)"
+    if ! apps="$(fleet_remote "$host" nvidia-smi --query-compute-apps=pid --format=csv,noheader,nounits)"; then
+      fleet_die "$host GPU application query failed"
+      return 1
+    fi
     [[ -z "$apps" ]] || fleet_die "$host has a live GPU compute application" || return
-    busy="$(fleet_remote "$host" ss -ltnH "sport = :$CHAMPION_API_PORT" || true)"
+    if ! busy="$(fleet_remote "$host" ss -ltnH "sport = :$CHAMPION_API_PORT")"; then
+      fleet_die "$host target port query failed"
+      return 1
+    fi
     [[ -z "$busy" ]] || fleet_die "$host target port $CHAMPION_API_PORT is occupied" || return
-    protected="$(fleet_docker "$host" ps --format '{{.Names}}' | grep -E "${CHAMPION_PROTECTED_CONTAINER_PATTERN:-^(hermes|openclaw|protected)}" || true)"
-    [[ -z "$protected" ]] || fleet_die "$host protected container is running: $protected" || return
+    if ! containers="$(fleet_docker "$host" ps --format '{{.Names}}')"; then
+      fleet_die "$host protected container query failed"
+      return 1
+    fi
+    if protected="$(fleet_match_protected_containers "$containers")"; then
+      protected_rc=0
+    else
+      protected_rc=$?
+    fi
+    case "$protected_rc" in
+      0) fleet_die "$host protected container is running: $protected"; return 1 ;;
+      1) ;;
+      *) fleet_die "$host protected container pattern evaluation failed"; return 1 ;;
+    esac
     image="$(fleet_docker "$host" image inspect "$CHAMPION_IMAGE_REF" --format '{{.Id}}' 2>/dev/null || true)"
     [[ "$image" == "$CHAMPION_IMAGE_ID" ]] || fleet_die "$host image identity mismatch" || return
     fleet_verify_model_files "$host" "$CHAMPION_CHECKPOINT_LOCK_PATH" || return
     fleet_verify_model_files "$host" "$CHAMPION_SIDECAR_LOCK_PATH" || return
     reports+=("$host|$arch|$cpus|$gpu|$capability|$mem|$polkit|$swap")
   done
-  (( max_mem - min_mem <= 524288 )) || fleet_die 'peer MemAvailable spread exceeds 512 MiB' || return
+  if [[ "$memory_policy" == strict ]]; then
+    (( max_mem - min_mem <= 524288 )) || fleet_die 'peer MemAvailable spread exceeds 512 MiB' || return
+  elif [[ "$memory_policy" != pre-compaction ]]; then
+    fleet_die "unknown memory verification policy: $memory_policy" || return
+  fi
   if [[ "$PROFILE" == fast ]]; then
     for host in "${CHAMPION_HOST_ARRAY[@]}"; do
       fleet_remote "$host" lscpu -p=CPU,MAXMHZ,NODE | "$CHAMPION_PYTHON" -c '
@@ -96,7 +189,7 @@ hosts=[]
 for row in sys.argv[1:]:
     host,arch,cpus,gpu,cc,mem,polkit,swap=row.split('|')
     hosts.append({'host':host,'architecture':arch,'online_cpus':int(cpus),'gpu':gpu,'compute_capability':cc,'mem_available_kib':int(mem),'polkit_rss_kib':int(polkit),'swap_used_kib':int(swap)})
-print(json.dumps({'schema_version':'1.0.0','result':'PASS','lock_scope':'coordinator-owned','comparison_environment':'drift-recorded','hosts':hosts},sort_keys=True))
+print(json.dumps({'schema_version':'1.0.0','result':'PASS','lock_scope':'canonical-rank0-required-for-mutation','comparison_environment':'drift-recorded','hosts':hosts},sort_keys=True))
 PY
 }
 
@@ -119,6 +212,105 @@ chat_probe() {
     --data '{"model":"glm-5.2","messages":[{"role":"user","content":"Reply briefly with SPARK_OK."}],"temperature":1.0,"max_tokens":96}' \
     "http://$CHAMPION_API_HOST:$CHAMPION_API_PORT/v1/chat/completions" \
     | "$CHAMPION_PYTHON" -c 'import json,sys; o=json.load(sys.stdin); assert (o.get("choices") or [{}])[0].get("message",{}).get("content")'
+}
+
+cache_busted_sparse_indexer_probe() {
+  local payload raw
+  payload="$("$CHAMPION_PYTHON" - "$CHAMPION_RUN_ID" <<'PY'
+import json,secrets,sys
+nonce=f"{sys.argv[1]}-{secrets.token_hex(16)}"
+payload={
+    "model":"glm-5.2",
+    "messages":[{"role":"user","content":f"cache-bust={nonce} " + ("probe " * 4096) + "\nReply briefly with SPARK_INDEX_OK."}],
+    "temperature":1.0,
+    "max_tokens":16,
+    "stream":False,
+}
+print(json.dumps(payload,separators=(",",":")))
+PY
+)" || return
+  raw="$("${CHAMPION_CURL_BIN:-curl}" -fsS --max-time 180 \
+    -H 'Content-Type: application/json' \
+    -H 'X-Champion-Probe: cache-busted-sparse-indexer' \
+    --data-binary "$payload" \
+    "http://$CHAMPION_API_HOST:$CHAMPION_API_PORT/v1/chat/completions")" || return
+  "$CHAMPION_PYTHON" -c 'import json,sys
+o=json.load(sys.stdin)
+choice=(o.get("choices") or [{}])[0]
+message=choice.get("message") or {}
+text=next((v.strip() for v in (message.get("content"),message.get("reasoning_content"),message.get("reasoning")) if isinstance(v,str) and v.strip()),"")
+prompt_tokens=(o.get("usage") or {}).get("prompt_tokens")
+assert isinstance(prompt_tokens,int) and prompt_tokens>2048, prompt_tokens
+assert "SPARK_INDEX_OK" in text, text' <<<"$raw"
+}
+
+compact_and_size_uniform_allocator_floor() {
+  local index host mem min_mem=999999999999 max_mem=0 floor
+  for index in 0 1 2 3; do
+    fleet_lock_assert_held || return
+    host="${CHAMPION_HOST_ARRAY[$index]}"
+    fleet_remote "$host" sudo -n sh -c "'sync; printf 3 > /proc/sys/vm/drop_caches'" || {
+      fleet_die "$host approved memory compaction failed"
+      return 1
+    }
+  done
+  for index in 0 1 2 3; do
+    fleet_lock_assert_held || return
+    host="${CHAMPION_HOST_ARRAY[$index]}"
+    mem="$(read_mem_available_kib "$host")"
+    [[ "$mem" =~ ^[1-9][0-9]{0,11}$ ]] || {
+      fleet_die "$host post-compaction MemAvailable is invalid: ${mem:-unknown}"
+      return 1
+    }
+    (( mem >= 121634816 )) || {
+      fleet_die "$host post-compaction MemAvailable $mem KiB is below 116 GiB"
+      return 1
+    }
+    (( mem < min_mem )) && min_mem=$mem
+    (( mem > max_mem )) && max_mem=$mem
+  done
+  (( max_mem - min_mem <= 524288 )) || {
+    fleet_die 'post-compaction peer MemAvailable spread exceeds 512 MiB'
+    return 1
+  }
+  floor="$((min_mem * 1024 - 6 * 1024 * 1024 * 1024))"
+  [[ "$floor" =~ ^[1-9][0-9]*$ ]] || {
+    fleet_die 'fleet-uniform allocator floor calculation failed'
+    return 1
+  }
+  printf '%s\n' "$floor"
+}
+
+allocator_readback_gate() {
+  local profile_drafter_cap="$1" index host name env_dump expected floor_lines
+  for index in 0 1 2 3; do
+    host="${CHAMPION_HOST_ARRAY[$index]}"; name="$CHAMPION_RUN_ID-rank$index"
+    env_dump="$(fleet_docker "$host" inspect "$name" --format '{{range .Config.Env}}{{println .}}{{end}}')" || {
+      fleet_die "$host/$name allocator environment readback failed"
+      return 1
+    }
+    [[ "$(grep -Fxc 'PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True' <<<"$env_dump" || true)" == 1 ]] || {
+      fleet_die "$host/$name PyTorch allocator environment mismatch"
+      return 1
+    }
+    expected="${CHAMPION_ALLOCATOR_FLOOR_ARRAY[$index]-}"
+    floor_lines="$(grep '^VLLM_UNIFIED_MEMORY_ALLOCATOR_BUDGET_BYTES=' <<<"$env_dump" || true)"
+    if [[ -n "$expected" ]]; then
+      [[ "$floor_lines" == "VLLM_UNIFIED_MEMORY_ALLOCATOR_BUDGET_BYTES=$expected" ]] || {
+        fleet_die "$host/$name allocator floor environment mismatch"
+        return 1
+      }
+    elif [[ -n "$floor_lines" ]]; then
+      fleet_die "$host/$name has an unexpected allocator floor environment"
+      return 1
+    fi
+    if [[ "$profile_drafter_cap" == 1 ]]; then
+      [[ "$(grep -Fxc 'VLLM_R17_PROFILE_DRAFTER_CAP=1' <<<"$env_dump" || true)" == 1 ]] || {
+        fleet_die "$host/$name drafter profile cap environment mismatch"
+        return 1
+      }
+    fi
+  done
 }
 
 rank_gate() {
@@ -155,6 +347,7 @@ transport_and_log_gate() {
 rollback_fast_pin() {
   local index host name
   for index in 0 1 2 3; do
+    fleet_lock_assert_held || return 1
     host="${CHAMPION_HOST_ARRAY[$index]}"; name="$CHAMPION_RUN_ID-rank$index"
     fleet_assert_exact "$host" "$name" "$CHAMPION_RUN_ID" || return 1
     fleet_docker "$host" update --cpuset-cpus 0-19 --cpuset-mems 0 "$name" >/dev/null || return 1
@@ -166,12 +359,14 @@ apply_fast_pin() {
   local index host name failed=0 observed
   set +e
   for index in 0 1 2 3; do
+    fleet_lock_assert_held || { failed=1; break; }
     host="${CHAMPION_HOST_ARRAY[$index]}"; name="$CHAMPION_RUN_ID-rank$index"
     fleet_assert_exact "$host" "$name" "$CHAMPION_RUN_ID" || { failed=1; break; }
     fleet_docker "$host" update --cpuset-cpus 5-9,15-19 --cpuset-mems 0 "$name" >/dev/null || { failed=1; break; }
   done
   if (( failed == 0 )); then
     for index in 0 1 2 3; do
+      fleet_lock_assert_held || { failed=1; break; }
       host="${CHAMPION_HOST_ARRAY[$index]}"; name="$CHAMPION_RUN_ID-rank$index"
       observed="$(fleet_docker "$host" inspect "$name" --format '{{.HostConfig.CpusetCpus}}|{{.HostConfig.CpusetMems}}')"
       [[ "$observed" == '5-9,15-19|0' ]] || { failed=1; break; }
@@ -190,26 +385,52 @@ apply_fast_pin() {
 }
 
 launch_profile() {
-  local canonical argv env_lines index host name existing allocator='' logs models_json
+  local canonical argv env_lines index host name existing allocator='' logs models_json mem
+  local allocator_contract allocator_scope allocator_floor allocator_cap uniform_floor=''
   canonical="$(profile_name "$PROFILE")" || return
   PROFILE="${canonical%%-*}"
+  allocator_contract="$("$CHAMPION_PYTHON" - "$CHAMPION_ROOT/presets/$canonical.json" <<'PY'
+import json,sys
+allocator=json.load(open(sys.argv[1]))["effective_engine"]["allocator"]
+print("|".join((allocator["scope"],allocator["floor"],str(allocator["profile_drafter_cap"]))))
+PY
+)" || return
+  IFS='|' read -r allocator_scope allocator_floor allocator_cap <<<"$allocator_contract"
+  argv="$("$CHAMPION_PYTHON" "$CHAMPION_ROOT/scripts/render_launch.py" --preset "$canonical" --cluster "${CHAMPION_CLUSTER_ENV:-$CHAMPION_ROOT/cluster.env}" --format argv)" || return
+  env_lines="$("$CHAMPION_PYTHON" "$CHAMPION_ROOT/scripts/render_launch.py" --preset "$canonical" --cluster "${CHAMPION_CLUSTER_ENV:-$CHAMPION_ROOT/cluster.env}" --format env)" || return
   fleet_lock_acquire || return
-  verify_hosts >/dev/null || return
+  if [[ "$allocator_scope" == fleet-uniform && "$allocator_floor" == computed ]]; then
+    verify_hosts pre-compaction >/dev/null || return
+    for index in 0 1 2 3; do
+      fleet_lock_assert_held || return
+      host="${CHAMPION_HOST_ARRAY[$index]}"; name="$CHAMPION_RUN_ID-rank$index"
+      existing="$(fleet_docker "$host" ps -a --filter "name=^/$name$" --format '{{.Names}}')"
+      [[ -z "$existing" ]] || fleet_die "existing target container $host/$name is preserved; choose a fresh run id" || return
+    done
+    fleet_consume_compaction_nonce_hash \
+      "$CHAMPION_COMPACTION_NONCE_HASH" "$CHAMPION_COMPACTION_RUN_HASH" || return
+    uniform_floor="$(compact_and_size_uniform_allocator_floor)" || return
+  else
+    verify_hosts >/dev/null || return
+  fi
   if [[ -n "${CHAMPION_REPLACE_RUN_ID:-}" ]]; then
     fleet_stop_exact_ordered "$CHAMPION_REPLACE_RUN_ID" || return
   fi
-  argv="$("$CHAMPION_PYTHON" "$CHAMPION_ROOT/scripts/render_launch.py" --preset "$canonical" --cluster "${CHAMPION_CLUSTER_ENV:-$CHAMPION_ROOT/cluster.env}" --format argv)"
-  env_lines="$("$CHAMPION_PYTHON" "$CHAMPION_ROOT/scripts/render_launch.py" --preset "$canonical" --cluster "${CHAMPION_CLUSTER_ENV:-$CHAMPION_ROOT/cluster.env}" --format env)"
+  CHAMPION_ALLOCATOR_FLOOR_ARRAY=()
   for index in 0 1 2 3; do
+    fleet_lock_assert_held || return
     host="${CHAMPION_HOST_ARRAY[$index]}"; name="$CHAMPION_RUN_ID-rank$index"
     existing="$(fleet_docker "$host" ps -a --filter "name=^/$name$" --format '{{.Names}}')"
     [[ -z "$existing" ]] || fleet_die "existing target container $host/$name is preserved; choose a fresh run id" || return
     fleet_remote "$host" install -d -m 0755 "$CHAMPION_RUN_ROOT/$CHAMPION_RUN_ID/rank$index" "$CHAMPION_RUN_ROOT/$CHAMPION_RUN_ID/cache/$canonical"
-    if [[ "$PROFILE" == large ]]; then
-      # shellcheck disable=SC2016
-      allocator="$(fleet_remote "$host" awk '/MemAvailable:/ {print ($2*1024)-6442450944}' /proc/meminfo)"
-      [[ "$allocator" =~ ^[0-9]+$ ]] || fleet_die "$host per-host allocator calculation failed" || return
+    allocator="$uniform_floor"
+    if [[ "$allocator_scope" == per-host && "$allocator_floor" == computed ]]; then
+      mem="$(read_mem_available_kib "$host")"
+      [[ "$mem" =~ ^[1-9][0-9]{0,11}$ ]] || fleet_die "$host per-host allocator input failed" || return
+      allocator="$((mem * 1024 - 6 * 1024 * 1024 * 1024))"
+      [[ "$allocator" =~ ^[1-9][0-9]*$ ]] || fleet_die "$host per-host allocator calculation failed" || return
     fi
+    CHAMPION_ALLOCATOR_FLOOR_ARRAY[index]="$allocator"
     run_args=(run -d --name "$name" --hostname "$host" --gpus all --network host --ipc host --shm-size 16g --pids-limit=-1
       --device "$CHAMPION_RDMA_UVERBS" --device "$CHAMPION_RDMA_CM"
       --label "org.0xdfi.champion.run_id=$CHAMPION_RUN_ID"
@@ -224,10 +445,15 @@ launch_profile() {
     fleet_docker "$host" "${run_args[@]}" >/dev/null
     STARTED=1
   done
+  fleet_lock_assert_held || return
+  allocator_readback_gate "$allocator_cap" || return
+  fleet_lock_assert_held || return
   fleet_docker "${CHAMPION_HOST_ARRAY[0]}" exec -d "$CHAMPION_RUN_ID-rank0" ray start --head --node-ip-address "${CHAMPION_FABRIC_ARRAY[0]}" --port 6379 --block >/dev/null
   for index in 1 2 3; do
+    fleet_lock_assert_held || return
     fleet_docker "${CHAMPION_HOST_ARRAY[$index]}" exec -d "$CHAMPION_RUN_ID-rank$index" ray start --address "${CHAMPION_FABRIC_ARRAY[0]}:6379" --node-ip-address "${CHAMPION_FABRIC_ARRAY[$index]}" --block >/dev/null
   done
+  fleet_lock_assert_held || return
   fleet_docker "${CHAMPION_HOST_ARRAY[0]}" exec -d "$CHAMPION_RUN_ID-rank0" bash -lc "exec $argv >/run/champion/serve.log 2>&1" >/dev/null
 
   for _ in $(seq 1 "${CHAMPION_READY_ATTEMPTS:-210}"); do
@@ -246,6 +472,9 @@ assert rows[0].get("max_model_len")==p["effective_engine"]["max_model_len"]' \
   rank_gate || return
   transport_and_log_gate || return
   chat_probe || fleet_die 'immediate chat failed' || return
+  if [[ "$PROFILE" == fast ]]; then
+    cache_busted_sparse_indexer_probe || fleet_die 'cache-busted sparse-indexer semantic probe failed' || return
+  fi
   READINESS_PASSED=1
   "${CHAMPION_SLEEP_BIN:-sleep}" "${CHAMPION_IDLE_SECONDS:-300}"
   api_health && chat_probe || fleet_die 'post-idle health/chat failed' || return
@@ -256,8 +485,10 @@ assert rows[0].get("max_model_len")==p["effective_engine"]["max_model_len"]' \
   fi
   if [[ "$PROFILE" == fast ]]; then
     apply_fast_pin || return
+    fleet_lock_assert_held || return
     printf '%s\n' 'launch-result=PASS profile=fast pin-state=pinned'
   else
+    fleet_lock_assert_held || return
     printf 'launch-result=PASS profile=%s pin-state=not-applicable\n' "$PROFILE"
   fi
 }

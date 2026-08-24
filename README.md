@@ -9,7 +9,7 @@ The exact checkpoint and W8 lm-head sidecar are not bundled. Both are `external-
 ## What is published
 
 - Public-source Docker build path: [docker/Dockerfile.champion](docker/Dockerfile.champion), [build lock](runtime/manifests/build-lock.json), source overlays, native patch, and hash-locked runtime requirements.
-- Exact public O14 import root and effective selection: [O14 import](runtime/manifests/o14-import.json) and [overlay manifest](runtime/manifests/overlay-files.json). Live-b4 reconciliation remains `not-verified`.
+- Exact public O14 import root and effective selection: [O14 import](runtime/manifests/o14-import.json) and [overlay manifest](runtime/manifests/overlay-files.json). Three allocator-related vLLM files are byte-reconciled to one operator-observed 2026-08-24 live champion container; that source observation is not complete image parity or a public live reproduction, so live-b4 reconciliation remains `not-verified`.
 - Three canonical presets: [Fast](presets/fast-320k.json), [Balanced](presets/balanced-650k.json), and [Large](presets/large-1m.json).
 - Fail-closed controller, static/runtime/correctness evaluators, benchmark evaluator, provenance ledger, license bundle, and release gates.
 - Build A v0, the measured decode-path Triton BMM kernel, at SHA-256 `965b6aeaf3a0c41abefec89a31592f6b8061a053053831be7c5e6f7560857515`. Build A v1 is excluded.
@@ -31,7 +31,9 @@ cd glm-5.2-dgx-spark-vllm027
 
 ./bin/champion verify-hosts fast
 ./bin/champion build --tag glm52-champion:local --receipt build-produced.receipt.json
-./bin/champion launch fast
+COMPACTION_NONCE="$(./.venv/bin/python -c 'import secrets; print(secrets.token_hex(16))')"
+./bin/champion launch fast --compaction-nonce "$COMPACTION_NONCE"
+unset COMPACTION_NONCE
 ./bin/champion verify fast --static
 ```
 
@@ -45,11 +47,31 @@ All profiles use TP4 / PP1 / PCP1, four sequences, `mnbt=2048`, DPTB `1024`, FUL
 
 | Profile | DCP | Max model length | KV bytes/rank | DCP details | Host action |
 |---|---:|---:|---:|---|---|
-| Fast (`fast-320k`) | 1 | 320000 | 10232320000 | no DCP exchange | boot unpinned; post-health pin to big cores with verified rollback |
+| Fast (`fast-320k`) | 1 | 320000 | 10232320000 | no DCP exchange; fleet-uniform computed allocator floor | one-use approved idle compaction; boot unpinned; post-health pin to big cores with verified rollback |
 | Balanced (`balanced-650k`) | 2 | 650000 | 10395482112 | `a2a`, interleave 1 | none |
-| Large (`large-1m`) | 4 | 1000000 | 7995534848 | `a2a`, interleave 1 | per-host allocator and profile-only drafter cap |
+| Large (`large-1m`) | 4 | 1000000 | 7995534848 | `a2a`, interleave 1 | per-host allocator floor and profile-only drafter cap |
 
 Large is the 1M-at-2048 profile. There is no 1M-at-4096 champion, no DPTB=256 champion, no `fuse_gemm_comms=true` promotion, and no create-time CPU cpuset.
+
+## 2026-08-24 Fast allocator and liveness repair
+
+A historical Fast production run stopped completing requests while `/health`, `/v1/models`, Docker, and Ray still appeared healthy. The failing request crossed the 2,048-token prefill boundary and required two 320 MiB sparse-indexer fold buffers. The runtime's explicit unified-memory floor was absent on the recovery path, leaving the weakest rank just below the transient-allocation requirement. `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` had also reached only the rank-0 API process after Ray started.
+
+The public Fast launcher now requires a fresh one-use nonce for idle all-node cache compaction, samples all four hosts afterward, and supplies one identical floor to every rank:
+
+```text
+min(post-compaction MemAvailable bytes across all four hosts)
+  - 4 GiB floor-derivation reserve term
+  - 2 GiB additional operator deduction
+```
+
+That launcher subtraction derives a floor; it does **not** guarantee 2 GiB remains free. In the observed R17 runtime, with `T=min(CUDA total, host total)`, fresh host availability `A`, hard host reserve `R`, current allocator baseline `C=max(allocated,reserved)`, and explicit floor `F`, the requested allowance is `E=min(T-R, max(C+max(0,A-R), F))`. Thus `F` may raise the conservative availability-derived allowance, while `T-R` remains the hard cap. The accepted live receipts on all four ranks recorded `F=requested=applied=119605592064` bytes. Rank 0 recorded `A=18183303168`, `C=104014544896`, and conservative `C+(A-R)=117902880768`, so the floor won exactly.
+
+The launcher injects `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` and the Fast drafter profile cap into each container before Ray or any worker starts, then reads the allocator floor environment back before starting Ray. Fast pins the runtime hard host reserve to `4294967296` bytes and disables the load-phase refresh only; profile, KV, and graph refreshes remain active. Balanced retains its existing defaults; Large uses a computed per-host floor. Readiness also includes a cache-busted semantic completion with more than 2,048 prompt tokens, plus the immediate and post-soak completions; process-only health cannot pass on its own.
+
+The exact observed `envs.py`, `utils/mem_utils.py`, and `v1/worker/gpu_worker.py` files that parse and consume the legacy-named `VLLM_UNIFIED_MEMORY_ALLOCATOR_BUDGET_BYTES` floor control are included as Apache-2.0 vLLM derivatives. Their target hashes, pinned upstream base hashes, and limited container-source observation are recorded in the runtime manifests. This closes the published source path for the allocator control without claiming the whole live image or service was publicly reproduced.
+
+Memory compaction is deliberately opt-in because dropping host page cache affects the whole node. The launcher validates the nonce and protected-container ERE before SSH, then holds a persistent `flock` at `CHAMPION_FLEET_LOCK` on the first `CHAMPION_HOSTS` entry from preflight through acceptance or rollback. Under that lock it atomically consumes only a domain-separated SHA-256 of the nonce on rank 0; replay or lock-liveness loss blocks compaction. The nonce itself is not written to logs or receipt paths, and every retry requires a fresh value. `stop` and authenticated image staging use the same canonical lock. This repair records the historical incident and hardens the public launcher; it does not change this checkout's `documented-not-reproduced` source-build status.
 
 ## Historical reference measurements
 

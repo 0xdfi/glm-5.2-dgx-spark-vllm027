@@ -23,19 +23,27 @@ def test_pinned_o14_identity_and_public_inventory():
     assert manifest["source"]["commit"] == module.O14_COMMIT
     assert manifest["public_source_inventory"]["vllm_file_count"] == 74
     assert manifest["live_b4_reconciliation"]["status"] == "not-verified"
+    assert manifest["live_b4_reconciliation"]["observed_overlay_files"] == {
+        "envs.py": "a1f1c8a0b73441658d22148cef086a766186b299ee74be4ab01a7249266fdd6c",
+        "utils/mem_utils.py": "132a62eba1a633b8295acd48ecdf99bc3f982a78655ac6b6a5939365b47daf6b",
+        "v1/worker/gpu_worker.py": "654f08d0352fabc126d9515e838ba18d7190fd1f39edcc8655f52440913cef13",
+    }
 
 
 def test_effective_champion_includes_later_runtime_closure_and_excludes_v1():
     module = load_importer()
     manifest = json.loads((ROOT / "runtime/manifests/overlay-files.json").read_text())
-    assert manifest["vllm"]["file_count"] == 74
+    assert manifest["vllm"]["file_count"] == 77
     assert manifest["b12x"]["file_count"] == 5
     assert set(module.LATER_CHAMPION_OVERRIDES) == {"vllm", "b12x"}
     assert set(module.LATER_CHAMPION_OVERRIDES["vllm"]) == {
+        "envs.py",
         "model_executor/layers/sparse_attn_indexer.py",
         "model_executor/models/deepseek_mtp.py",
         "model_executor/models/deepseek_v2.py",
+        "utils/mem_utils.py",
         "v1/attention/backends/mla/sparse_utils.py",
+        "v1/worker/gpu_worker.py",
     }
     assert set(module.LATER_CHAMPION_OVERRIDES["b12x"]) == {
         "attention/indexer/paged.py",

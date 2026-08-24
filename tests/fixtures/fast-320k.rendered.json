@@ -121,6 +121,10 @@
       "1"
     ],
     [
+      "PYTORCH_CUDA_ALLOC_CONF",
+      "expandable_segments:True"
+    ],
+    [
       "RAY_DEDUP_LOGS",
       "0"
     ],
@@ -201,6 +205,18 @@
       "0"
     ],
     [
+      "VLLM_R17_PROFILE_DRAFTER_CAP",
+      "1"
+    ],
+    [
+      "VLLM_UNIFIED_MEMORY_HOST_RESERVE_BYTES",
+      "4294967296"
+    ],
+    [
+      "VLLM_UNIFIED_MEMORY_LOAD_CEILING",
+      "0"
+    ],
+    [
       "VLLM_USE_B12X_SPARSE_INDEXER",
       "1"
     ],
@@ -224,9 +240,9 @@
       "window": 32
     },
     "allocator": {
-      "budget": "none",
-      "profile_drafter_cap": 0,
-      "scope": "none"
+      "floor": "computed",
+      "profile_drafter_cap": 1,
+      "scope": "fleet-uniform"
     },
     "async_scheduling": true,
     "attention_backend": "B12X_MLA_SPARSE",
