@@ -33,7 +33,7 @@ for host in "${CHAMPION_HOST_ARRAY[@]}"; do
   fleet_lock_assert_held
   fleet_remote "$host" docker system df >/dev/null
   fleet_remote "$builder_host" docker image inspect "$image_id" --format '{{.Id}}' >/dev/null
-  fleet_remote "$builder_host" docker save "$image_id" | fleet_remote "$host" docker load >/dev/null
+  fleet_remote "$builder_host" docker save "$image_id" | fleet_remote_with_stdin "$host" docker load >/dev/null
   got="$(fleet_remote "$host" docker image inspect "$image_id" --format '{{.Id}}')"
   [[ "$got" == "$image_id" ]] || { printf 'stage-image: BLOCKED: %s loaded image mismatch\n' "$host" >&2; exit 1; }
   label="$(fleet_remote "$host" docker image inspect "$image_id" --format '{{index .Config.Labels "org.0xdfi.champion.build_subject_id"}}')"
