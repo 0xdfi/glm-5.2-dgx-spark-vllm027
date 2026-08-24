@@ -26,8 +26,25 @@ NATIVE_PATCH_SHA256 = "55344cbfd51765ba1ad77f4bf4c12724617c123e5d0c8d32f795b6203
 HISTORICAL_NATIVE_OBJECT_SHA256 = (
     "be9feccb01c0532d849fa30aab6a0edc809773be22ba8bb4a734040a9e4f95b8"
 )
+LIVE_CHAMPION_CONTAINER = "glm-prod-320k-b4-repaired-20260824T0425Z-rank0"
+LIVE_CHAMPION_IMAGE_ID = (
+    "sha256:b2efd0fb2871d9d6aa31540a6b3aaddb6a96b7ee8e3e6f848a813b87e270d917"
+)
+LIVE_CHAMPION_OBSERVED_AT = "2026-08-24"
+LIVE_CHAMPION_OVERLAY_HASHES = {
+    "envs.py": "a1f1c8a0b73441658d22148cef086a766186b299ee74be4ab01a7249266fdd6c",
+    "utils/mem_utils.py": "132a62eba1a633b8295acd48ecdf99bc3f982a78655ac6b6a5939365b47daf6b",
+    "v1/worker/gpu_worker.py": "654f08d0352fabc126d9515e838ba18d7190fd1f39edcc8655f52440913cef13",
+}
 LATER_CHAMPION_OVERRIDES: dict[str, dict[str, dict[str, str]]] = {
     "vllm": {
+        "envs.py": {
+            "sha256": LIVE_CHAMPION_OVERLAY_HASHES["envs.py"],
+            "base_sha256": "567c99293678739cdd133897e3c7edfeba3a7fc5c635c43b29aea6bb89251244",
+            "stage": "r17-dcp1-fast-uma-budget",
+            "authority": "operator-observed-live-container",
+            "container_path": "/usr/local/lib/python3.12/dist-packages/vllm/envs.py",
+        },
         "model_executor/layers/sparse_attn_indexer.py": {
             "sha256": "113d85a97d7f4ef1047ebd2381e09b0a83bc7346f35bd2265100fabc9f3580fc",
             "base_sha256": "a6386326379dcf94439a0b020cd51a71ebfd0a36eaeb563417c821456b82a475",
@@ -43,10 +60,24 @@ LATER_CHAMPION_OVERRIDES: dict[str, dict[str, dict[str, str]]] = {
             "base_sha256": "bcbd9cde689ffe3f5f271aff3a5e01351b05a68371192cac9d65cb5ffc6b4ba9",
             "stage": "r17-dcp2-late-dcp-bind",
         },
+        "utils/mem_utils.py": {
+            "sha256": LIVE_CHAMPION_OVERLAY_HASHES["utils/mem_utils.py"],
+            "base_sha256": "c56776468121f217e205df157289bc90a2ea3719d3ce3d63c597efe3cfd66919",
+            "stage": "r17-dcp1-fast-uma-budget",
+            "authority": "operator-observed-live-container",
+            "container_path": "/usr/local/lib/python3.12/dist-packages/vllm/utils/mem_utils.py",
+        },
         "v1/attention/backends/mla/sparse_utils.py": {
             "sha256": "7e1ca1c76b81c09f6198dd51e4649b4cd1ae0314311d1604464c3566ff624adf",
             "base_sha256": "a15a5767a6afe1427dccc395d7125d3f8f2b701b859c31eec91918d04d5761b4",
             "stage": "r17-dcp2-v3+dcp4",
+        },
+        "v1/worker/gpu_worker.py": {
+            "sha256": LIVE_CHAMPION_OVERLAY_HASHES["v1/worker/gpu_worker.py"],
+            "base_sha256": "50134ca3a147f5470e556437cbd40a13ea05b098efbac6553d5ea2f3e5f7ff57",
+            "stage": "r17-dcp1-fast-uma-budget",
+            "authority": "operator-observed-live-container",
+            "container_path": "/usr/local/lib/python3.12/dist-packages/vllm/v1/worker/gpu_worker.py",
         },
     },
     "b12x": {
@@ -116,6 +147,22 @@ def _later_champion_content(root: Path, package: str, relative: str) -> bytes:
             f"expected {expected}, got {actual}"
         )
     return content
+
+
+def _later_champion_source(metadata: dict[str, str]) -> dict[str, Any]:
+    source: dict[str, Any] = {
+        "authority": metadata.get("authority", "sealed-r17-source-lineage"),
+        "stage": metadata["stage"],
+    }
+    if container_path := metadata.get("container_path"):
+        source["observation"] = {
+            "container": LIVE_CHAMPION_CONTAINER,
+            "container_path": container_path,
+            "host_alias": "spark-nord",
+            "image_id": LIVE_CHAMPION_IMAGE_ID,
+            "observed_at": LIVE_CHAMPION_OBSERVED_AT,
+        }
+    return source
 
 
 def _manifest(repo: Path, name: str) -> dict[str, Any]:
@@ -216,10 +263,7 @@ def _expected_files(
             "donor": donor,
         }
         if override:
-            target_entry["later_champion_source"] = {
-                "authority": "sealed-r17-source-lineage",
-                "stage": override["stage"],
-            }
+            target_entry["later_champion_source"] = _later_champion_source(override)
             target_entry["o14_predecessor_path"] = source_path
         else:
             target_entry["o14_origin_path"] = source_path
@@ -239,15 +283,12 @@ def _expected_files(
                 "base_sha256": metadata["base_sha256"],
                 "classification": "modified",
                 "donor": _donor(path),
-                "later_champion_source": {
-                    "authority": "sealed-r17-source-lineage",
-                    "stage": metadata["stage"],
-                },
+                "later_champion_source": _later_champion_source(metadata),
             }
         )
     vllm_entries.sort(key=lambda item: item["path"])
-    if len(vllm_entries) != 74:
-        raise ImportError(f"effective vLLM overlay must contain 74 files, got {len(vllm_entries)}")
+    if len(vllm_entries) != 77:
+        raise ImportError(f"effective vLLM overlay must contain 77 files, got {len(vllm_entries)}")
 
     b12x_entries: list[dict[str, Any]] = []
     for entry in b12x["files"]:
@@ -308,7 +349,7 @@ def _expected_files(
     overlay = {
         "schema_version": "1.0.0",
         "source": {"repository": O14_REPOSITORY, "commit": O14_COMMIT, "tree": O14_TREE},
-        "vllm": {"file_count": 74, "files": vllm_entries},
+        "vllm": {"file_count": 77, "files": vllm_entries},
         "b12x": {"file_count": 5, "files": b12x_entries},
         "build_a": {
             "active": "v0",
@@ -328,7 +369,7 @@ def _expected_files(
             "native_path_count": 14,
         },
         "effective_champion": {
-            "vllm_overlay_file_count": 74,
+            "vllm_overlay_file_count": 77,
             "b12x_overlay_file_count": 5,
             "build_a_kernel": "v0",
             "build_a_v1_excluded": True,
@@ -345,7 +386,15 @@ def _expected_files(
         },
         "live_b4_reconciliation": {
             "status": "not-verified",
-            "reason": "No live serving host or image was inspected for this publication batch.",
+            "reason": (
+                "Three allocator overlay files were byte-reconciled from one "
+                "operator-observed live champion container; complete live-image "
+                "parity and a public live-service reproduction were not performed."
+            ),
+            "container": LIVE_CHAMPION_CONTAINER,
+            "image_id": LIVE_CHAMPION_IMAGE_ID,
+            "observed_at": LIVE_CHAMPION_OBSERVED_AT,
+            "observed_overlay_files": LIVE_CHAMPION_OVERLAY_HASHES,
         },
     }
     output["runtime/manifests/overlay-files.json"] = _json_bytes(overlay)
@@ -564,7 +613,7 @@ def main(argv: list[str] | None = None) -> int:
     except ImportError as exc:
         print(f"runtime-source-closure: FAIL: {exc}", file=sys.stderr)
         return 1
-    print("runtime-source-closure: PASS (O14=74 vLLM source, effective=74+Build-A-v0; B12X=5; native=14)")
+    print("runtime-source-closure: PASS (O14=74 vLLM source, effective=77+Build-A-v0; B12X=5; native=14)")
     return 0
 
 

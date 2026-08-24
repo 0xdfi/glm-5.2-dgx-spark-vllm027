@@ -4,7 +4,7 @@
   },
   "effective_engine": {
     "adaptive_mtp": {"k": [2, 4, 5], "max_tokens": 5, "window": 32},
-    "allocator": {"budget": "computed", "profile_drafter_cap": 1, "scope": "per-host"},
+    "allocator": {"floor": "computed", "profile_drafter_cap": 1, "scope": "per-host"},
     "async_scheduling": true,
     "attention_backend": "B12X_MLA_SPARSE",
     "dcp_communication": "a2a",

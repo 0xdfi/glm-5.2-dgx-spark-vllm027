@@ -27,6 +27,9 @@ PRESET_NAMES = {
 }
 SECRET_NAME = re.compile(r"(?:TOKEN|PASSWORD|SECRET|PRIVATE_KEY|CREDENTIAL)(?!.*(?:FILE|PATH|REF)$)")
 ENV_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
+RUNTIME_ONLY_CLUSTER_SETTINGS = {
+    "CHAMPION_APPROVE_MEMORY_COMPACTION",
+}
 REQUIRED_SITE = {
     "CHAMPION_HOSTS",
     "CHAMPION_FABRIC_IPS",
@@ -41,6 +44,7 @@ REQUIRED_SITE = {
     "CHAMPION_IMAGE_ID",
     "CHAMPION_API_HOST",
     "CHAMPION_API_PORT",
+    "CHAMPION_FLEET_LOCK",
     "CHAMPION_RUN_ID",
 }
 
@@ -64,6 +68,10 @@ def load_cluster(path: Path) -> dict[str, str]:
         name, value = line.split("=", 1)
         if not ENV_NAME.fullmatch(name) or name in values:
             raise RenderError(f"{path}:{number}: invalid or duplicate setting")
+        if name in RUNTIME_ONLY_CLUSTER_SETTINGS:
+            raise RenderError(
+                f"{path}:{number}: {name} is a runtime-only setting and must not be persisted"
+            )
         if SECRET_NAME.search(name):
             raise RenderError("secret values are forbidden in cluster.env; use a mode-0600 credential reference")
         value = value.strip()

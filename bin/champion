@@ -24,7 +24,9 @@ Usage: bin/champion COMMAND [arguments]
   build ...                 build from public pinned source
   pull                      require the future convenience-image publication gate
   render PROFILE            render argv, environment, and EngineCore JSON
-  launch PROFILE            run the explicit hardened fleet state machine
+  launch PROFILE [--compaction-nonce HEX32]
+                            run the explicit hardened fleet state machine;
+                            Fast requires a fresh one-use compaction nonce
   verify PROFILE --static   run source/AST contracts only (no live receipt)
   verify PROFILE --evidence DIR
                             evaluate captured evidence offline as PROVISIONAL
@@ -65,7 +67,9 @@ case "$COMMAND" in
     ;;
   launch)
     need_env
-    exec "$ROOT/scripts/launch_cluster.sh" launch "${1:-fast}"
+    profile="${1:-fast}"
+    if (( $# > 0 )); then shift; fi
+    exec "$ROOT/scripts/launch_cluster.sh" launch "$profile" "$@"
     ;;
   verify)
     need_env

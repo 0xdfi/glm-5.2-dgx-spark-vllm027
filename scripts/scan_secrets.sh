@@ -31,6 +31,20 @@ RULES = (
     ("private-path", re.compile(r"/(?:Users|home)/[^/\s]+(?:/|\b)")),
     ("private-network", re.compile(r"\b(?:10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})\b")),
 )
+PUBLIC_NON_SECRET_PATHS = (
+    "/home/dfi/.cache/nous-fleet-mutation.lock",
+)
+PUBLIC_PATH_BOUNDARY = re.compile(r"(?=$|[^A-Za-z0-9._/-])")
+
+
+def private_path_scan_view(line: str) -> str:
+    for public_path in PUBLIC_NON_SECRET_PATHS:
+        line = re.sub(
+            re.escape(public_path) + PUBLIC_PATH_BOUNDARY.pattern,
+            "<canonical-fleet-lock>",
+            line,
+        )
+    return line
 
 def git(root: Path, *args: str, data: bytes | None = None, check: bool = True) -> bytes:
     result = subprocess.run(["git", "-C", str(root), *args], input=data, capture_output=True)
@@ -160,9 +174,10 @@ for oid, path, content in records:
     text = content.decode("utf-8", errors="replace")
     for number, line in enumerate(text.splitlines(), 1):
         for rule, pattern in RULES:
+            candidate = private_path_scan_view(line) if rule == "private-path" else line
             if rule == "private-network" and "==" in line and not re.search(r"(?:https?|ssh)://", line):
                 continue
-            if pattern.search(line):
+            if pattern.search(candidate):
                 key = (rule, oid, path, number)
                 if key not in seen:
                     findings.append({"rule": rule, "object": oid, "path": path, "line": number})

@@ -1,8 +1,12 @@
 {
-  "container_env": {},
+  "container_env": {
+    "VLLM_R17_PROFILE_DRAFTER_CAP": "1",
+    "VLLM_UNIFIED_MEMORY_HOST_RESERVE_BYTES": "4294967296",
+    "VLLM_UNIFIED_MEMORY_LOAD_CEILING": "0"
+  },
   "effective_engine": {
     "adaptive_mtp": {"k": [2, 4, 5], "max_tokens": 5, "window": 32},
-    "allocator": {"budget": "none", "profile_drafter_cap": 0, "scope": "none"},
+    "allocator": {"floor": "computed", "profile_drafter_cap": 1, "scope": "fleet-uniform"},
     "async_scheduling": true,
     "attention_backend": "B12X_MLA_SPARSE",
     "dcp_communication": "none",

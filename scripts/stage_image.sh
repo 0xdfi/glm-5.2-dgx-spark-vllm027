@@ -9,6 +9,7 @@ CHAMPION_PYTHON="$CHAMPION_ROOT/.venv/bin/python"
 # shellcheck source=scripts/lib/fleet.sh
 source "$CHAMPION_ROOT/scripts/lib/fleet.sh"
 fleet_load_cluster
+trap fleet_lock_release EXIT
 
 STATUS="$CHAMPION_STATUS_FILE"
 [[ "$STATUS" == /* ]] || STATUS="$CHAMPION_ROOT/$STATUS"
@@ -25,9 +26,11 @@ PY
 [[ -n "$accepted" ]] || { printf '%s\n' 'stage-image: BLOCKED: authenticated accepted build status is required' >&2; exit 3; }
 IFS='|' read -r build_subject image_id builder_host <<<"$accepted"
 [[ "$image_id" == "$CHAMPION_IMAGE_ID" ]] || { printf '%s\n' 'stage-image: BLOCKED: status image does not match configured image' >&2; exit 3; }
+fleet_lock_acquire
 
 # Staging changes only image storage. It never stops, updates, creates, or removes containers.
 for host in "${CHAMPION_HOST_ARRAY[@]}"; do
+  fleet_lock_assert_held
   fleet_remote "$host" docker system df >/dev/null
   fleet_remote "$builder_host" docker image inspect "$image_id" --format '{{.Id}}' >/dev/null
   fleet_remote "$builder_host" docker save "$image_id" | fleet_remote "$host" docker load >/dev/null
@@ -36,4 +39,5 @@ for host in "${CHAMPION_HOST_ARRAY[@]}"; do
   label="$(fleet_remote "$host" docker image inspect "$image_id" --format '{{index .Config.Labels "org.0xdfi.champion.build_subject_id"}}')"
   [[ "$label" == "$build_subject" ]] || { printf 'stage-image: BLOCKED: %s build subject mismatch\n' "$host" >&2; exit 1; }
 done
+fleet_lock_assert_held
 printf 'stage-image-result=PASS image=%s images-preserved=true\n' "$image_id"

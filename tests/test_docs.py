@@ -133,9 +133,14 @@ def test_benchmark_and_operations_documents_state_fail_closed_protocol():
     for term in (
         "real generation", "post-health", "rollback", "headroom", "polkit",
         "guardian", "co-resident", "fabric", "900K", "run identity", "current-window",
+        "--compaction-nonce", "persistent SSH", "flock -n",
+        "/home/dfi/.cache/nous-fleet-mutation.lock",
+        "F=requested=applied=119605592064",
     ):
         assert term.lower() in operations.lower()
     assert "always safe, always" not in operations
+    assert "CHAMPION_APPROVE_MEMORY_COMPACTION=1" not in operations
+    assert "runtime slack" not in operations.lower()
 
 
 def test_distributed_operator_docs_have_no_private_locations_and_local_links_resolve():
@@ -146,7 +151,10 @@ def test_distributed_operator_docs_have_no_private_locations_and_local_links_res
     for path in paths:
         text = path.read_text(encoding="utf-8")
         assert not private_ip.search(text), path
-        assert not private_path.search(text), path
+        private_path_view = text.replace(
+            "/home/dfi/.cache/nous-fleet-mutation.lock", "<canonical-fleet-lock>"
+        )
+        assert not private_path.search(private_path_view), path
         for target in link.findall(text):
             if "://" in target or target.startswith("#"):
                 continue

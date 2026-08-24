@@ -15,6 +15,42 @@ def text(path: str) -> str:
     return (ROOT / path).read_text()
 
 
+def allocator_math():
+    source = text("runtime/overlays/vllm/vllm/utils/mem_utils.py")
+    tree = ast.parse(source)
+    selected = [
+        node
+        for node in tree.body
+        if isinstance(node, (ast.ClassDef, ast.FunctionDef))
+        and node.name
+        in {
+            "UnifiedMemoryBudgetError",
+            "UnifiedMemoryAllocatorReceipt",
+            "compute_unified_memory_allocator_ceiling",
+        }
+    ]
+    namespace: dict[str, object] = {}
+    exec(
+        compile(
+            ast.fix_missing_locations(ast.Module(
+                body=[
+                    ast.ImportFrom(
+                        module="dataclasses",
+                        names=[ast.alias(name="dataclass")],
+                        level=0,
+                    ),
+                    *selected,
+                ],
+                type_ignores=[],
+            )),
+            "mem_utils_allocator_contract.py",
+            "exec",
+        ),
+        namespace,
+    )
+    return namespace["compute_unified_memory_allocator_ceiling"]
+
+
 def test_builda_v0_only_and_two_real_mla_call_sites():
     kernel = text("runtime/kernels/builda_bmm_v0.py")
     ast.parse(kernel)
@@ -58,4 +94,81 @@ def test_lm_head_top64_scheduler_and_per_host_allocator_source_contracts():
     presets = text("presets/large-1m.json")
     assert 'VLLM_LMHEAD_V2_TOPM", "64"' in logits
     assert "decode_prefill_token_budget" in scheduler and "prefill_tokens_scheduled" in scheduler
-    assert '"scope": "per-host"' in presets and '"budget": "computed"' in presets
+    assert '"scope": "per-host"' in presets and '"floor": "computed"' in presets
+
+
+def test_unified_memory_budget_parser_and_worker_wiring_are_published():
+    envs = text("runtime/overlays/vllm/vllm/envs.py")
+    mem_utils = text("runtime/overlays/vllm/vllm/utils/mem_utils.py")
+    gpu_worker = text("runtime/overlays/vllm/vllm/v1/worker/gpu_worker.py")
+    for source in (envs, mem_utils, gpu_worker):
+        ast.parse(source)
+
+    assert '"VLLM_UNIFIED_MEMORY_ALLOCATOR_BUDGET_BYTES"' in envs
+    assert "def compute_unified_memory_allocator_ceiling(" in mem_utils
+    assert "def apply_unified_memory_allocator_ceiling(" in mem_utils
+    assert (
+        "phase_budget_bytes=envs.VLLM_UNIFIED_MEMORY_ALLOCATOR_BUDGET_BYTES"
+        in gpu_worker
+    )
+    assert "set_per_process_memory_fraction" in gpu_worker
+
+
+def test_explicit_unified_memory_floor_can_raise_conservative_allowance():
+    compute = allocator_math()
+    gib = 1024**3
+    receipt = compute(
+        phase="profile",
+        total_cuda_bytes=128 * gib,
+        total_host_bytes=128 * gib,
+        available_bytes=8 * gib,
+        reserve_bytes=4 * gib,
+        current_allocated_bytes=100 * gib,
+        current_reserved_bytes=100 * gib,
+        phase_budget_bytes=112 * gib,
+    )
+
+    conservative_allowance = 100 * gib + (8 * gib - 4 * gib)
+    assert conservative_allowance == 104 * gib
+    assert receipt.requested_ceiling_bytes == 112 * gib
+    assert receipt.requested_ceiling_bytes > conservative_allowance
+
+
+def test_total_minus_host_reserve_remains_the_hard_allocator_cap():
+    compute = allocator_math()
+    gib = 1024**3
+    receipt = compute(
+        phase="graphs",
+        total_cuda_bytes=128 * gib,
+        total_host_bytes=128 * gib,
+        available_bytes=8 * gib,
+        reserve_bytes=4 * gib,
+        current_allocated_bytes=100 * gib,
+        current_reserved_bytes=100 * gib,
+        phase_budget_bytes=127 * gib,
+    )
+
+    assert receipt.requested_ceiling_bytes == 124 * gib
+    assert receipt.requested_ceiling_bytes == receipt.pool_total_bytes - 4 * gib
+    assert receipt.requested_ceiling_bytes < receipt.phase_budget_bytes
+
+
+def test_accepted_r17_live_floor_selects_exact_observed_receipt():
+    compute = allocator_math()
+    accepted_floor = 119_605_592_064
+    receipt = compute(
+        phase="profile",
+        total_cuda_bytes=128_849_018_880,
+        total_host_bytes=128_849_018_880,
+        available_bytes=18_183_303_168,
+        reserve_bytes=4_294_967_296,
+        current_allocated_bytes=104_014_544_896,
+        current_reserved_bytes=104_014_544_896,
+        phase_budget_bytes=accepted_floor,
+    )
+
+    assert receipt.current_baseline_bytes + (
+        receipt.available_bytes - receipt.reserve_bytes
+    ) == 117_902_880_768
+    assert receipt.requested_ceiling_bytes == accepted_floor
+    assert receipt.phase_budget_bytes == accepted_floor

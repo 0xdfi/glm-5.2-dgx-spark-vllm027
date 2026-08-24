@@ -25,6 +25,7 @@
     "NCCL_P2P_DISABLE": "0",
     "NCCL_RAS_ENABLE": "0",
     "NCCL_SHM_DISABLE": "1",
+    "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
     "PYTHONDONTWRITEBYTECODE": "1",
     "PYTHONUNBUFFERED": "1",
     "RAY_DEDUP_LOGS": "0",

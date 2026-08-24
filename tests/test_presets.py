@@ -59,6 +59,16 @@ def test_profile_specific_dcp_allocator_and_pinning_contracts():
     fast = load_contract(ROOT / "presets/fast-320k.json", "preset")
     assert fast["effective_engine"]["dcp_communication"] == "none"
     assert fast["effective_engine"]["dcp_kv_interleave"] == 0
+    assert fast["effective_engine"]["allocator"] == {
+        "scope": "fleet-uniform",
+        "floor": "computed",
+        "profile_drafter_cap": 1,
+    }
+    assert fast["container_env"] == {
+        "VLLM_R17_PROFILE_DRAFTER_CAP": "1",
+        "VLLM_UNIFIED_MEMORY_HOST_RESERVE_BYTES": "4294967296",
+        "VLLM_UNIFIED_MEMORY_LOAD_CEILING": "0",
+    }
     assert fast["host_actions"] == {
         "boot_cpuset": None,
         "post_health_cpuset": "5-9,15-19",
@@ -71,14 +81,18 @@ def test_profile_specific_dcp_allocator_and_pinning_contracts():
     assert balanced["effective_engine"]["dcp_communication"] == "a2a"
     assert balanced["effective_engine"]["dcp_kv_interleave"] == 1
     assert balanced["host_actions"]["post_health_cpuset"] is None
+    assert "VLLM_UNIFIED_MEMORY_HOST_RESERVE_BYTES" not in balanced["container_env"]
+    assert "VLLM_UNIFIED_MEMORY_LOAD_CEILING" not in balanced["container_env"]
 
     large = load_contract(ROOT / "presets/large-1m.json", "preset")
     assert large["effective_engine"]["allocator"] == {
         "scope": "per-host",
-        "budget": "computed",
+        "floor": "computed",
         "profile_drafter_cap": 1,
     }
     assert "VLLM_UNIFIED_MEMORY_ALLOCATOR_BUDGET_BYTES" not in large["container_env"]
+    assert "VLLM_UNIFIED_MEMORY_HOST_RESERVE_BYTES" not in large["container_env"]
+    assert "VLLM_UNIFIED_MEMORY_LOAD_CEILING" not in large["container_env"]
 
 
 def test_rendered_views_have_champion_baseline_without_experiment_arms():
@@ -94,6 +108,13 @@ def test_rendered_views_have_champion_baseline_without_experiment_arms():
         assert env["VLLM_B12X_MLA_SPEC_EXTEND_AS_DECODE"] == "0"
         assert env["VLLM_MOE_MARLIN_ATOMIC_ADD"] == "1"
         assert env["VLLM_ADAPTIVE_SPEC_DEPTHS"] == "2,4,5"
+        assert env["PYTORCH_CUDA_ALLOC_CONF"] == "expandable_segments:True"
+        if name == "fast-320k":
+            assert env["VLLM_UNIFIED_MEMORY_HOST_RESERVE_BYTES"] == "4294967296"
+            assert env["VLLM_UNIFIED_MEMORY_LOAD_CEILING"] == "0"
+        else:
+            assert "VLLM_UNIFIED_MEMORY_HOST_RESERVE_BYTES" not in env
+            assert "VLLM_UNIFIED_MEMORY_LOAD_CEILING" not in env
         assert output["expected_engine_core"]["decode_prefill_tokens"] == 1024
         assert output["model_claim"] == "blocked-until-complete-hashes-and-rights"
         assert all("192.168." not in value for value in output["site"].values() if isinstance(value, str))

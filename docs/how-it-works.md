@@ -24,7 +24,11 @@ The explicit per-rank budgets are profile contracts rather than allocator guesse
 | Balanced | 10395482112 |
 | Large | 7995534848 |
 
-Large additionally uses a per-host computed unified-memory allocator budget and a profile-phase drafter cap. That mechanism avoids proving impossible profile shapes while preserving the deployed runtime shapes.
+Fast uses one fleet-uniform unified-memory allocator floor derived from the weakest verified host after explicitly approved idle compaction, less 4 GiB plus a further 2 GiB operator deduction. The latter is a floor-derivation margin, not guaranteed free memory. The exact R17 function treats the explicit, legacy-named byte setting as `F` in `E=min(T-R, max(C+max(0,A-R), F))`, where `T` is the smaller of CUDA-visible and host total, `R` is the hard reserve, `C` is current allocator residency, and `A` is fresh host availability. The controller passes the same `F` and Fast profile-phase drafter cap to every container before Ray starts and reads both back before allowing worker creation. Balanced retains the upstream runtime defaults, while Large retains its per-host computed floor and profile-phase drafter cap.
+
+The accepted R17 live receipts recorded `F=requested=applied=119605592064` bytes on every rank. Rank 0's `A=18183303168`, `R=4294967296`, and `C=104014544896` yielded a conservative allowance of `117902880768`, so the explicit floor raised it to the observed receipt. The runtime still bounded that result by `T-R`; the explicit value was not an independent hard cap.
+
+The effective overlay includes the exact operator-observed `vllm/envs.py`, `vllm/utils/mem_utils.py`, and `vllm/v1/worker/gpu_worker.py` derivatives that parse the byte setting and wire it into integrated-GPU allocator phases. The manifest binds those files to both their observed target hashes and their bases in pinned vLLM commit `6e448d0ea9bf3d88d898b65449ca6dc2aec170ac`. That three-file source reconciliation is narrower than live-image parity and does not change the public reproduction status.
 
 ## Decode and speculative execution
 

@@ -1,13 +1,72 @@
 #!/usr/bin/env bash
 set -u
-case "$*" in
+original_args="$*"
+probe_header=0
+payload=''
+while (( $# > 0 )); do
+  case "$1" in
+    -H|--header)
+      (( $# >= 2 )) || exit 64
+      [[ "$2" == 'X-Champion-Probe: cache-busted-sparse-indexer' ]] && probe_header=1
+      shift 2
+      ;;
+    --data-binary)
+      (( $# >= 2 )) || exit 64
+      payload="$2"
+      shift 2
+      ;;
+    *) shift ;;
+  esac
+done
+
+case "$original_args" in
   *'/v1/chat/completions'*)
-    printf 'curl chat-probe %s\n' "$*" >>"${CHAMPION_FAKE_LOG:?}"
-    printf '%s\n' '{"choices":[{"message":{"content":"SPARK_OK"}}]}'
+    if (( probe_header == 0 )); then
+      printf 'curl chat-probe %s\n' "$original_args" >>"${CHAMPION_FAKE_LOG:?}"
+      printf '%s\n' '{"choices":[{"message":{"content":"SPARK_OK"}}]}'
+      exit 0
+    fi
+    printf 'curl cache-busted-sparse-indexer-probe %s\n' "$original_args" >>"${CHAMPION_FAKE_LOG:?}"
+    if ! prompt_tokens="$("${CHAMPION_PYTHON:-python3}" - "$payload" <<'PY'
+import json
+import re
+import sys
+
+request = json.loads(sys.argv[1])
+messages = request.get("messages")
+assert request.get("model") == "glm-5.2"
+assert request.get("max_tokens") == 16
+assert request.get("stream") is False
+assert isinstance(messages, list) and len(messages) == 1
+assert messages[0].get("role") == "user"
+content = messages[0].get("content")
+assert isinstance(content, str)
+match = re.fullmatch(
+    r"cache-bust=\S+-[0-9a-f]{32} ((?:probe ){4096})\n"
+    r"Reply briefly with SPARK_INDEX_OK\.",
+    content,
+)
+assert match is not None
+assert match.group(1).count("probe ") == 4096
+print(4096 + 23)
+PY
+)"; then
+      printf '%s\n' 'invalid cache-busted sparse-indexer payload' >&2
+      exit 65
+    fi
+    if [[ "${CHAMPION_FAKE_SCENARIO:-healthy}" == short-indexer-probe ]]; then
+      prompt_tokens=2048
+    fi
+    if [[ "${CHAMPION_FAKE_SCENARIO:-healthy}" == wrong-indexer-response ]]; then
+      response='UNRELATED_RESPONSE'
+    else
+      response='SPARK_INDEX_OK'
+    fi
+    printf '{"choices":[{"message":{"content":"%s"}}],"usage":{"prompt_tokens":%s}}\n' "$response" "$prompt_tokens"
     ;;
   *'/v1/models'*)
-    printf 'curl models %s\n' "$*" >>"${CHAMPION_FAKE_LOG:?}"
-    case "${CHAMPION_ACTIVE_PROFILE:-fast}" in
+    printf 'curl models %s\n' "$original_args" >>"${CHAMPION_FAKE_LOG:?}"
+    case "${CHAMPION_FAKE_PROFILE:-fast}" in
       balanced) length=650000 ;;
       large) length=1000000 ;;
       *) length=320000 ;;
@@ -15,7 +74,7 @@ case "$*" in
     printf '{"data":[{"id":"glm-5.2","max_model_len":%s}]}\n' "$length"
     ;;
   *)
-    printf 'curl health %s\n' "$*" >>"${CHAMPION_FAKE_LOG:?}"
+    printf 'curl health %s\n' "$original_args" >>"${CHAMPION_FAKE_LOG:?}"
     printf '%s\n' '{}'
     ;;
 esac
