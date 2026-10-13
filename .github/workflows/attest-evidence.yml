@@ -113,7 +113,7 @@ jobs:
       - name: Preserve candidate DSSE bundle
         run: cp '${{ steps.attest_candidate.outputs.bundle-path }}' "$RUNNER_TEMP/source-evidence/source-complete-candidate.attestation.json"
       - name: Upload only the fixed sanitized evidence directory
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: source-evidence-${{ github.sha }}
           path: ${{ runner.temp }}/source-evidence
