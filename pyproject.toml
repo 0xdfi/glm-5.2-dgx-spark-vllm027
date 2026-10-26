@@ -14,7 +14,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "pip==26.2.1",
+  "pip==26.2.2",
   "pytest==9.1.1",
   "reuse[charset-normalizer]==6.2.0",
 ]
